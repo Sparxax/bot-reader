@@ -234,50 +234,42 @@
   </div>
 
   <script>
-    /* --- ВЕЧНАЯ СИСТЕМА ХРАНЕНИЯ БАЗЫ ДАННЫХ --- */
+    /* --- ВЕЧНАЯ СИСТЕМА ХРАНЕНИЯ (ЗАЩИЩЕННАЯ ОТ СБРОСОВ) --- */
     const MASTER_STORAGE_KEY = 'bot_reader_chats_master';
 
-    function loadMasterDB() {
-      let mergedDB = {};
-
-      // 1. Считываем данные из мастер-ключа
-      const masterData = localStorage.getItem(MASTER_STORAGE_KEY);
-      if (masterData) {
-        try { mergedDB = JSON.parse(masterData); } catch(e) {}
-      }
-
-      // 2. Сканируем и объединяем данные ИЗ ВСЕХ СТАРЫХ КЛЮЧЕЙ (app_db, app_db_v1...v6, bot_db)
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key !== MASTER_STORAGE_KEY && (key.includes('app_db') || key.includes('bot_db'))) {
-          try {
-            const oldData = JSON.parse(localStorage.getItem(key));
-            for (let botToken in oldData) {
-              if (!mergedDB[botToken]) mergedDB[botToken] = {};
-              for (let chatId in oldData[botToken]) {
-                if (!mergedDB[botToken][chatId]) {
-                  mergedDB[botToken][chatId] = oldData[botToken][chatId];
-                } else {
-                  // Если чат уже есть, объединяем сообщения без дубликатов
-                  const existingMsgs = mergedDB[botToken][chatId].messages || [];
-                  const newMsgs = oldData[botToken][chatId].messages || [];
-                  const msgMap = new Map();
-                  
-                  existingMsgs.concat(newMsgs).forEach(m => msgMap.set(m.id, m));
-                  mergedDB[botToken][chatId].messages = Array.from(msgMap.values()).sort((a,b) => a.id - b.id);
-                }
-              }
-            }
-          } catch(e) {}
-        }
-      }
-
-      // Сохраняем объединенную базу в вечный ключ
-      localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(mergedDB));
-      return mergedDB;
+    // 1. Просим браузер НЕ чистить память этого сайта при нехватке места
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist();
     }
 
-    let bots = JSON.parse(localStorage.getItem('app_bots') || '[]');
+    // 2. Безопасная загрузка без риска затирания пустой базой
+    function loadMasterDB() {
+      try {
+        const raw = localStorage.getItem(MASTER_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (typeof parsed === 'object' && parsed !== null) return parsed;
+        }
+      } catch(e) {
+        console.error("Ошибка чтения памяти:", e);
+      }
+      return {};
+    }
+
+    // 3. Безопасная функция сохранения
+    function saveDB() {
+      try {
+        if (db && typeof db === 'object') {
+          localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(db));
+        }
+      } catch(e) {
+        console.error("Ошибка сохранения в память:", e);
+      }
+    }
+
+    let bots = [];
+    try { bots = JSON.parse(localStorage.getItem('app_bots') || '[]'); } catch(e) { bots = []; }
+
     let activeBotToken = localStorage.getItem('app_active_token') || '';
     let db = loadMasterDB(); 
     let globalSoundEnabled = localStorage.getItem('app_global_sound') !== 'false';
@@ -288,10 +280,6 @@
     let pollInterval = null;
     let isHistoryPushed = false;
     let bannerTimeout = null;
-
-    function saveDB() {
-      localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(db));
-    }
 
     /* --- РЕЗЕРВНОЕ КОПИРОВАНИЕ --- */
     function openBackupModal() { document.getElementById('backup-modal').style.display = 'flex'; }
