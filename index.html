@@ -120,6 +120,7 @@
         <div class="header-subtitle" id="status-text">Соединение...</div>
       </div>
       <div>
+        <button class="icon-btn" onclick="openBackupModal()" title="Резервное копирование">💾</button>
         <button class="icon-btn" id="global-sound-btn" onclick="toggleGlobalSound()" title="Глобальный звук и вибрация">🔔</button>
         <button class="icon-btn" onclick="clearAllData()" title="Сбросить всё">🗑️</button>
       </div>
@@ -220,36 +221,65 @@
     </div>
   </div>
 
+  <!-- Модальное окно Резервного Копирования -->
+  <div class="modal-overlay" id="backup-modal" onclick="closeBackupModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <h3>Резервные копии</h3>
+      <p style="font-size:13px; color:#7F91A4; margin: 10px 0 15px 0;">Сохраните свои диалоги в файл, чтобы не потерять их при смене браузера.</p>
+      <button class="btn-primary" style="margin-bottom:10px;" onclick="exportBackup()">📥 Экспортировать базу</button>
+      <button class="btn-primary" style="background:#242F3D; margin-bottom:10px;" onclick="document.getElementById('import-file-input').click()">📤 Импортировать из файла</button>
+      <input type="file" id="import-file-input" style="display:none;" accept=".json" onchange="importBackup(event)">
+      <button class="btn-primary" style="background:none; color:#7F91A4;" onclick="closeBackupModal()">Закрыть</button>
+    </div>
+  </div>
+
   <script>
+    /* --- ВЕЧНАЯ СИСТЕМА ХРАНЕНИЯ БАЗЫ ДАННЫХ --- */
+    const MASTER_STORAGE_KEY = 'bot_reader_chats_master';
+
+    function loadMasterDB() {
+      let mergedDB = {};
+
+      // 1. Считываем данные из мастер-ключа
+      const masterData = localStorage.getItem(MASTER_STORAGE_KEY);
+      if (masterData) {
+        try { mergedDB = JSON.parse(masterData); } catch(e) {}
+      }
+
+      // 2. Сканируем и объединяем данные ИЗ ВСЕХ СТАРЫХ КЛЮЧЕЙ (app_db, app_db_v1...v6, bot_db)
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key !== MASTER_STORAGE_KEY && (key.includes('app_db') || key.includes('bot_db'))) {
+          try {
+            const oldData = JSON.parse(localStorage.getItem(key));
+            for (let botToken in oldData) {
+              if (!mergedDB[botToken]) mergedDB[botToken] = {};
+              for (let chatId in oldData[botToken]) {
+                if (!mergedDB[botToken][chatId]) {
+                  mergedDB[botToken][chatId] = oldData[botToken][chatId];
+                } else {
+                  // Если чат уже есть, объединяем сообщения без дубликатов
+                  const existingMsgs = mergedDB[botToken][chatId].messages || [];
+                  const newMsgs = oldData[botToken][chatId].messages || [];
+                  const msgMap = new Map();
+                  
+                  existingMsgs.concat(newMsgs).forEach(m => msgMap.set(m.id, m));
+                  mergedDB[botToken][chatId].messages = Array.from(msgMap.values()).sort((a,b) => a.id - b.id);
+                }
+              }
+            }
+          } catch(e) {}
+        }
+      }
+
+      // Сохраняем объединенную базу в вечный ключ
+      localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(mergedDB));
+      return mergedDB;
+    }
+
     let bots = JSON.parse(localStorage.getItem('app_bots') || '[]');
     let activeBotToken = localStorage.getItem('app_active_token') || '';
-    // Автоматическое восстановление диалогов из старых версий
-function loadDatabase() {
-  const currentKey = 'app_db_v6';
-  
-  // Если есть данные в текущей версии
-  if (localStorage.getItem(currentKey)) {
-    try { return JSON.parse(localStorage.getItem(currentKey)); } catch(e) {}
-  }
-  
-  // Проверяем все возможные старые ключи и переносим данные
-  const legacyKeys = ['app_db_v5', 'app_db_v4', 'app_db_v3', 'app_db_v2', 'app_db_v1', 'app_db', 'bot_db'];
-  for (const key of legacyKeys) {
-    const oldData = localStorage.getItem(key);
-    if (oldData) {
-      try {
-        const parsed = JSON.parse(oldData);
-        if (Object.keys(parsed).length > 0) {
-          localStorage.setItem(currentKey, oldData); // Переносим в новую версию
-          return parsed;
-        }
-      } catch (e) {}
-    }
-  }
-  return {};
-}
-
-let db = loadDatabase(); 
+    let db = loadMasterDB(); 
     let globalSoundEnabled = localStorage.getItem('app_global_sound') !== 'false';
 
     let currentChatId = null;
@@ -258,6 +288,44 @@ let db = loadDatabase();
     let pollInterval = null;
     let isHistoryPushed = false;
     let bannerTimeout = null;
+
+    function saveDB() {
+      localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(db));
+    }
+
+    /* --- РЕЗЕРВНОЕ КОПИРОВАНИЕ --- */
+    function openBackupModal() { document.getElementById('backup-modal').style.display = 'flex'; }
+    function closeBackupModal() { document.getElementById('backup-modal').style.display = 'none'; }
+
+    function exportBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `chats_backup_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedDB = JSON.parse(e.target.result);
+          db = importedDB;
+          saveDB();
+          alert('База данных успешно импортирована!');
+          closeBackupModal();
+          renderDialogsList();
+        } catch(err) {
+          alert('Ошибка чтения файла!');
+        }
+      };
+      reader.readAsText(file);
+    }
 
     /* --- Оповещения --- */
     function triggerNotificationAlert() {
@@ -440,7 +508,6 @@ let db = loadDatabase();
 
       const isDuplicate = botDb[chatId].messages.some(m => m.id === msg.message_id);
       if (!isDuplicate) {
-        // Определение переслано ли входящее сообщение из Telegram
         let forwardFrom = null;
         if (msg.forward_from) {
           forwardFrom = `${msg.forward_from.first_name || ''} ${msg.forward_from.last_name || ''}`.trim();
@@ -690,7 +757,6 @@ let db = loadDatabase();
       const chat = db[activeBotToken][currentChatId];
 
       if (forEveryone) {
-        // Отправка запроса на удаление сообщения у обеих сторон в Telegram
         try {
           const res = await fetch(`https://api.telegram.org/bot${activeBotToken}/deleteMessage`, {
             method: 'POST',
@@ -710,7 +776,6 @@ let db = loadDatabase();
         }
       }
 
-      // Удаление локально из памяти приложения
       chat.messages = chat.messages.filter(m => m.id !== selectedContextMsgId);
       saveDB();
       renderMessagesInRoom(currentChatId);
@@ -747,7 +812,6 @@ let db = loadDatabase();
       const msgToForward = sourceChat.messages.find(m => m.id === selectedContextMsgId);
       if (!msgToForward) return;
 
-      // Вызов метода forwardMessage API Telegram
       const url = `https://api.telegram.org/bot${activeBotToken}/forwardMessage`;
       try {
         const res = await fetch(url, {
@@ -767,7 +831,7 @@ let db = loadDatabase();
             id: data.result.message_id,
             type: 'out',
             text: msgToForward.text,
-            forwardFrom: sourceChat.user.name, // Имя отправителя для плашки пересылки
+            forwardFrom: sourceChat.user.name,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           });
           saveDB();
@@ -908,10 +972,6 @@ let db = loadDatabase();
         localStorage.clear();
         location.reload();
       }
-    }
-
-    function saveDB() {
-      localStorage.setItem('app_db_v6', JSON.stringify(db));
     }
 
     function escapeHtml(text) {
