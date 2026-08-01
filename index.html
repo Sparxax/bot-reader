@@ -223,7 +223,33 @@
   <script>
     let bots = JSON.parse(localStorage.getItem('app_bots') || '[]');
     let activeBotToken = localStorage.getItem('app_active_token') || '';
-    let db = JSON.parse(localStorage.getItem('app_db_v6') || '{}'); 
+    // Автоматическое восстановление диалогов из старых версий
+function loadDatabase() {
+  const currentKey = 'app_db_v6';
+  
+  // Если есть данные в текущей версии
+  if (localStorage.getItem(currentKey)) {
+    try { return JSON.parse(localStorage.getItem(currentKey)); } catch(e) {}
+  }
+  
+  // Проверяем все возможные старые ключи и переносим данные
+  const legacyKeys = ['app_db_v5', 'app_db_v4', 'app_db_v3', 'app_db_v2', 'app_db_v1', 'app_db', 'bot_db'];
+  for (const key of legacyKeys) {
+    const oldData = localStorage.getItem(key);
+    if (oldData) {
+      try {
+        const parsed = JSON.parse(oldData);
+        if (Object.keys(parsed).length > 0) {
+          localStorage.setItem(currentKey, oldData); // Переносим в новую версию
+          return parsed;
+        }
+      } catch (e) {}
+    }
+  }
+  return {};
+}
+
+let db = loadDatabase(); 
     let globalSoundEnabled = localStorage.getItem('app_global_sound') !== 'false';
 
     let currentChatId = null;
