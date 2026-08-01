@@ -127,18 +127,18 @@
     let currentChatId = null;
     let selectedReplyMsgId = null;
     let pollInterval = null;
+    let isHistoryPushed = false; // Флаг для предотвращения мусора в истории
 
-    /* --- ИСПРАВЛЕНИЕ: Системная кнопка "Назад" смартфона --- */
+    /* --- Обработка физической/системной кнопки "Назад" --- */
     window.addEventListener('popstate', (event) => {
       if (currentChatId) {
-        // Закрываем окно чата без вылета из приложения
         closeChatRoomUI();
       }
     });
 
     function triggerHardwareBack() {
       if (currentChatId) {
-        history.back(); // Вызывает виртуальный запуск popstate
+        history.back(); // Вызывает popstate
       }
     }
 
@@ -336,12 +336,20 @@
       renderMessagesInRoom(chatId);
       document.getElementById('chat-room').style.display = 'flex';
 
-      // Пушим новое состояние в историю, чтобы перехватывать встроенную кнопку «Назад»
-      history.pushState({ inChat: true }, '', '#chat');
+      // Оптимизированная работа с историей:
+      if (!isHistoryPushed) {
+        // Запушить ровно 1 раз при входе в режим чатов
+        history.pushState({ inChat: true }, '', '#chat');
+        isHistoryPushed = true;
+      } else {
+        // Если переходим из чата в чат — заменяем текущее состояние, не добавляя новые записи
+        history.replaceState({ inChat: true }, '', '#chat');
+      }
     }
 
     function closeChatRoomUI() {
       currentChatId = null;
+      isHistoryPushed = false; // Сбрасываем флаг при выходе на главный экран
       cancelReplyQuote();
       document.getElementById('chat-room').style.display = 'none';
       renderDialogsList();
