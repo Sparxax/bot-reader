@@ -335,7 +335,6 @@
           <button class="emoji-tab-btn active" onclick="switchEmojiCategory('smileys', this)">😀</button>
           <button class="emoji-tab-btn" onclick="switchEmojiCategory('animals', this)">🐻</button>
           <button class="emoji-tab-btn" onclick="switchEmojiCategory('food', this)">🍕</button>
-
           <button class="emoji-tab-btn" onclick="switchEmojiCategory('activity', this)">⚽</button>
           <button class="emoji-tab-btn" onclick="switchEmojiCategory('travel', this)">🚗</button>
           <button class="emoji-tab-btn" onclick="switchEmojiCategory('objects', this)">💡</button>
@@ -445,36 +444,41 @@
     let selectedContextMsgId = null;
     let pollInterval = null;
     let isHistoryPushed = false;
+    let isEmojiPickerPushed = false;
     let recordMode = 'mic';
     let holdTimer = null;
     let isRecording = false;
     let recSecs = 0;
     let recInterval = null;
 
-    /* --- МОДУЛЬ УМНОГО ПОИСКА И КАТЕГОРИЙ APPLE EMOJI --- */
+    /* --- УЛУЧШЕННЫЙ МОДУЛЬ ПОИСКА И КАТЕГОРИЙ APPLE EMOJI --- */
     let fullEmojiDatabase = [];
     let activeCategory = 'smileys';
 
-    // Русские синонимы и ассоциации для поискового движка
+    // Расширенный словарь русских ассоциаций и метатегов
     const russianDictionary = {
-      "смех": ["smile", "joy", "laugh", "happy", "rofl", "lol", "funny", "смешно", "радость"],
-      "любовь": ["heart", "love", "kiss", "heart_eyes", "любить", "сердце", "поцелуй"],
-      "огонь": ["fire", "flame", "hot", "пламя", "жара", "круто"],
-      "грусть": ["sad", "cry", "sob", "crying", "плач", "слезы", "боль"],
-      "собака": ["dog", "puppy", "woof", "пес", "собачка"],
-      "кот": ["cat", "kitty", "meow", "кошка", "котёнок"],
-      "еда": ["food", "pizza", "burger", "apple", "cake", "кушать", "обед"],
-      "спорт": ["sport", "soccer", "ball", "fitness", "мяч", "бег"],
-      "машина": ["car", "auto", "vehicle", "авто", "тачка", "руль"],
-      "праздник": ["party", "tada", "gift", "birthday", "салют", "подарок"]
+      "смех": ["smile", "joy", "laugh", "happy", "rofl", "lol", "funny", "смешно", "радость", "улыбка", "хаха"],
+      "улыбка": ["smile", "grinning", "happy", "joy", "доволен"],
+      "любовь": ["heart", "love", "kiss", "heart_eyes", "любить", "сердце", "поцелуй", "влюблен", "романтика"],
+      "сердце": ["heart", "love", "red_heart", "красное"],
+      "огонь": ["fire", "flame", "hot", "пламя", "жара", "круто", "топ", "жжет"],
+      "грусть": ["sad", "cry", "sob", "crying", "плач", "слезы", "боль", "грустно", "грустный", "печаль", "дизлайк"],
+      "слезы": ["cry", "sob", "tears", "crying", "плач"],
+      "собака": ["dog", "puppy", "woof", "пес", "собачка", "щенок"],
+      "кот": ["cat", "kitty", "meow", "кошка", "котёнок", "мяу"],
+      "еда": ["food", "pizza", "burger", "apple", "cake", "кушать", "обед", "вкусность", "жратва"],
+      "спорт": ["sport", "soccer", "ball", "fitness", "мяч", "бег", "футбол"],
+      "машина": ["car", "auto", "vehicle", "авто", "тачка", "руль", "автомобиль"],
+      "праздник": ["party", "tada", "gift", "birthday", "салют", "подарок", "день рождения", "шар"],
+      "сон": ["sleep", "sleeping", "zzz", "tired", "спать", "устал"],
+      "зло": ["angry", "rage", "devil", "злой", "ярость", "черт"],
+      "круто": ["cool", "sunglasses", "fire", "thumbsup", "очки", "класс"]
     };
 
-    // Главная функция генерации кода Apple-иконки для CDN
     function getEmojiCodeHex(unified) {
       return unified.toLowerCase().replace(/ /g, '-');
     }
 
-    // Загрузка полного Unicode реестра эмодзи с детальными тегами
     async function loadFullEmojiDatabase() {
       try {
         const response = await fetch('https://cdn.jsdelivr.net/npm/emoji-datasource-apple/emoji.json');
@@ -488,9 +492,26 @@
     function toggleEmojiPicker() {
       const picker = document.getElementById('emoji-picker');
       const isVisible = picker.style.display === 'flex';
-      picker.style.display = isVisible ? 'none' : 'flex';
-      if (!isVisible && fullEmojiDatabase.length === 0) {
-        loadFullEmojiDatabase();
+      
+      if (isVisible) {
+        closeEmojiPickerUI();
+      } else {
+        picker.style.display = 'flex';
+        if (fullEmojiDatabase.length === 0) loadFullEmojiDatabase();
+
+        // Пушим состояние в history, чтобы кнопка «Назад» закрывала каталог
+        if (!isEmojiPickerPushed) {
+          history.pushState({ emojiOpen: true }, '', '#emoji');
+          isEmojiPickerPushed = true;
+        }
+      }
+    }
+
+    function closeEmojiPickerUI() {
+      const picker = document.getElementById('emoji-picker');
+      picker.style.display = 'none';
+      if (isEmojiPickerPushed) {
+        isEmojiPickerPushed = false;
       }
     }
 
@@ -509,7 +530,7 @@
         return;
       }
 
-      // Расширяем поиск ассоциированными английскими тегами
+      // Собираем ключи для ассоциативного поиска
       let searchTerms = [query];
       for (const [key, aliases] of Object.entries(russianDictionary)) {
         if (key.includes(query) || query.includes(key)) {
@@ -520,7 +541,13 @@
       const filtered = fullEmojiDatabase.filter(item => {
         const name = (item.name || '').toLowerCase();
         const shortName = (item.short_name || '').toLowerCase();
-        return searchTerms.some(term => name.includes(term) || shortName.includes(term));
+        const shortNames = (item.short_names || []).join(' ').toLowerCase();
+
+        return searchTerms.some(term => 
+          name.includes(term) || 
+          shortName.includes(term) || 
+          shortNames.includes(term)
+        );
       });
 
       renderEmojiGrid(filtered);
@@ -531,7 +558,6 @@
       let listToRender = customList;
 
       if (!listToRender) {
-        // Фильтруем по категории
         const catMap = {
           'smileys': 'Smileys & Emotion',
           'animals': 'Animals & Nature',
@@ -545,7 +571,12 @@
         listToRender = fullEmojiDatabase.filter(e => e.category === targetCategory);
       }
 
-      grid.innerHTML = listToRender.slice(0, 150).map(item => {
+      if (listToRender.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1 / -1; color: #7F91A4; font-size: 13px; text-align: center; padding: 20px;">Ничего не найдено</div>`;
+        return;
+      }
+
+      grid.innerHTML = listToRender.slice(0, 160).map(item => {
         const hex = getEmojiCodeHex(item.unified);
         const char = item.short_name || 'emoji';
         return `
@@ -559,7 +590,6 @@
     }
 
     function insertEmoji(unifiedHex) {
-      // Преобразуем Hex в реальный символ Unicode
       const codePoints = unifiedHex.split('-').map(hex => parseInt(hex, 16));
       const emojiChar = String.fromCodePoint(...codePoints);
       
@@ -767,8 +797,25 @@
       if (btn) btn.innerText = globalSoundEnabled ? '🔔 Уведомления: Вкл' : '🔕 Уведомления: Выкл';
     }
 
-    window.addEventListener('popstate', () => { if (currentChatId) closeChatRoomUI(); });
-    function triggerHardwareBack() { if (currentChatId) history.back(); }
+    /* --- ИСПРАВЛЕННАЯ ОБРАБОТКА СИСТЕМНОЙ КНОПКИ «НАЗАД» --- */
+    window.addEventListener('popstate', (e) => {
+      const picker = document.getElementById('emoji-picker');
+      
+      // 1. Если открыты эмодзи — при вызове Назад закрываем только их
+      if (picker.style.display === 'flex') {
+        closeEmojiPickerUI();
+        return;
+      }
+      
+      // 2. Если мы были в комнате чата — закрываем чат
+      if (currentChatId) {
+        closeChatRoomUI();
+      }
+    });
+
+    function triggerHardwareBack() { 
+      history.back(); 
+    }
 
     window.onload = () => {
       updateGlobalSoundUI();
@@ -971,7 +1018,7 @@
       currentChatId = null;
       isHistoryPushed = false;
       document.getElementById('header-dropdown').style.display = 'none';
-      document.getElementById('emoji-picker').style.display = 'none';
+      closeEmojiPickerUI();
       cancelReplyQuote();
       document.getElementById('chat-room').style.display = 'none';
       renderDialogsList();
@@ -1102,7 +1149,7 @@
           renderMessagesInRoom(currentChatId);
           input.value = '';
           cancelReplyQuote();
-          document.getElementById('emoji-picker').style.display = 'none';
+          closeEmojiPickerUI();
         }
       } catch (e) {}
     }
