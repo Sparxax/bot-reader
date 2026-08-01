@@ -17,7 +17,7 @@
     header { background-color: #17212B; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #0B1118; height: 56px; }
     .header-title { font-weight: 600; font-size: 16px; cursor: pointer; }
     .header-subtitle { font-size: 12px; color: #7F91A4; }
-    .icon-btn { background: none; border: none; color: #64B5F6; font-size: 18px; cursor: pointer; padding: 6px; }
+    .icon-btn { background: none; border: none; color: #64B5F6; font-size: 20px; cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; }
 
     /* Экран Входа */
     #auth-screen { padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
@@ -27,8 +27,8 @@
     .bot-list-item { background: #17212B; padding: 10px; margin: 6px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
 
     /* Список диалогов */
-    #dialogs-screen { display: none; flex-direction: column; height: 100%; }
-    .search-bar { padding: 8px 12px; background: #17212B; border-bottom: 1px solid #0E1621; }
+    #dialogs-screen { display: none; flex-direction: column; height: 100%; position: relative; }
+    .search-bar { padding: 8px 12px; background: #17212B; border-bottom: 1px solid #0E1621; display: none; }
     .search-bar input { margin: 0; }
     .chat-list { flex: 1; overflow-y: auto; }
     .chat-item { display: flex; align-items: center; padding: 12px 16px; background: #17212B; border-bottom: 1px solid #0E1621; cursor: pointer; }
@@ -44,6 +44,27 @@
     .chat-preview { font-size: 13px; color: #7F91A4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
     .badge { background: #5288C1; color: #fff; font-size: 11px; font-weight: bold; padding: 2px 7px; border-radius: 12px; margin-left: 8px; }
 
+    /* ВЫДВИЖНОЕ БОКОВОЕ МЕНЮ (DRAWER) ~75% */
+    .drawer-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 150; }
+    .drawer { position: fixed; top: 0; left: -75%; width: 75%; height: 100%; background: #17212B; z-index: 160; transition: left 0.25s ease-out; display: flex; flex-direction: column; border-right: 1px solid #0B1118; }
+    .drawer.open { left: 0; }
+    .drawer-overlay.active { display: block; }
+
+    .drawer-header { padding: 20px 16px 12px 16px; background: #202B36; display: flex; flex-direction: column; gap: 10px; cursor: pointer; position: relative; }
+    .drawer-avatar { width: 54px; height: 54px; border-radius: 50%; background: #5288C1; font-size: 22px; font-weight: bold; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .drawer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .drawer-bot-info { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 16px; margin-top: 4px; }
+    
+    .drawer-menu-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+    .drawer-accounts-dropdown { display: none; background: #131C24; border-bottom: 1px solid #0B1118; }
+    .drawer-item { padding: 14px 16px; display: flex; align-items: center; gap: 16px; font-size: 15px; font-weight: 500; cursor: pointer; }
+    .drawer-item:active { background: #202B36; }
+    .drawer-item-icon { font-size: 20px; width: 24px; text-align: center; color: #7F91A4; }
+
+    .mini-avatar { width: 32px; height: 32px; border-radius: 50%; background: #5288C1; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+    .mini-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .active-check { color: #64B5F6; margin-left: auto; font-size: 14px; }
+
     /* Экран комнаты чата */
     #chat-room { display: none; flex-direction: column; height: 100%; position: absolute; top:0; left:0; right:0; bottom:0; background: #0E1621; z-index: 10; }
     .messages-container { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; position: relative; }
@@ -55,7 +76,7 @@
     .msg-meta { font-size: 10px; color: #7F91A4; text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
     .reaction-badge { font-size: 12px; background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 8px; margin-right: auto; }
 
-    /* Блоки цитат и пересылки в стиле Telegram */
+    /* Блоки цитат и пересылки */
     .reply-quote { background: rgba(0,0,0,0.2); border-left: 3px solid #64B5F6; padding: 4px 8px; margin-bottom: 6px; border-radius: 4px; font-size: 12px; color: #B0BEC5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .forward-quote { border-left: 3px solid #64B5F6; padding-left: 6px; margin-bottom: 4px; }
     .forward-header { font-size: 11px; color: #64B5F6; font-weight: 600; margin-bottom: 2px; }
@@ -67,7 +88,7 @@
     .input-bar input { flex: 1; margin: 0; }
 
     /* Контекстные и Модальные окна */
-    .context-menu-overlay, .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 100; align-items: center; justify-content: center; }
+    .context-menu-overlay, .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
     .context-menu { background: #17212B; border-radius: 12px; width: 280px; padding: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
     .reactions-bar { display: flex; justify-content: space-around; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid #242F3D; font-size: 22px; }
     .reaction-btn { cursor: pointer; transition: transform 0.1s; }
@@ -75,17 +96,19 @@
     .context-item { padding: 10px 12px; color: #fff; font-size: 15px; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 10px; }
     .context-item:active { background: #242F3D; }
 
-    .modal-card { background: #17212B; width: 320px; border-radius: 12px; padding: 20px; text-align: center; }
-    .profile-avatar-box { width: 100px; height: 100px; border-radius: 50%; background: #5288C1; font-size: 36px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; overflow: hidden; }
+    .modal-card { background: #17212B; width: 320px; border-radius: 12px; padding: 20px; text-align: center; max-height: 85vh; overflow-y: auto; }
+    .profile-avatar-box { width: 90px; height: 90px; border-radius: 50%; background: #5288C1; font-size: 32px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; overflow: hidden; }
     .profile-avatar-box img { width: 100%; height: 100%; object-fit: cover; }
     .copyable-field { padding: 8px; border-radius: 6px; cursor: pointer; transition: background 0.2s; margin-bottom: 4px; }
     .copyable-field:active { background: #242F3D; }
+
+    .profile-actions { margin-top: 15px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #242F3D; padding-top: 15px; }
 
     .empty-state { text-align: center; color: #7F91A4; margin-top: 50px; font-size: 14px; }
     
     /* Тосты и Баннеры */
     #notification-banner { display: none; position: fixed; top: 10px; left: 10px; right: 10px; background: #242F3D; color: #fff; padding: 12px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 300; align-items: center; justify-content: space-between; border-left: 4px solid #64B5F6; }
-    #toast { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 200; }
+    #toast { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 400; }
   </style>
 </head>
 <body>
@@ -114,24 +137,48 @@
   <!-- 2. Главный экран: Чаты -->
   <div id="dialogs-screen">
     <header>
-      <button class="icon-btn" onclick="openBotSelector()">🤖 Боты</button>
-      <div>
+      <button class="icon-btn" onclick="toggleDrawer()">☰</button>
+      <div style="flex:1; margin-left: 12px;">
         <div class="header-title" id="active-bot-title">Чат Бот</div>
         <div class="header-subtitle" id="status-text">Соединение...</div>
       </div>
       <div>
-        <button class="icon-btn" onclick="openBackupModal()" title="Резервное копирование">💾</button>
-        <button class="icon-btn" id="global-sound-btn" onclick="toggleGlobalSound()" title="Глобальный звук и вибрация">🔔</button>
-        <button class="icon-btn" onclick="clearAllData()" title="Сбросить всё">🗑️</button>
+        <button class="icon-btn" onclick="toggleSearchBar()" title="Поиск">🔍</button>
       </div>
     </header>
 
-    <div class="search-bar">
+    <div class="search-bar" id="search-bar-container">
       <input type="text" id="search-input" placeholder="Поиск чатов..." oninput="renderDialogsList()">
     </div>
 
     <div class="chat-list" id="dialogs-container">
       <div class="empty-state">Нет активных диалогов</div>
+    </div>
+
+    <!-- БОКОВОЕ МЕНЮ (DRAWER) -->
+    <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
+    <div class="drawer" id="drawer-menu">
+      <div class="drawer-header" onclick="toggleAccountsDropdown()">
+        <div class="drawer-avatar" id="drawer-bot-avatar">🤖</div>
+        <div class="drawer-bot-info">
+          <span id="drawer-bot-name">Админ</span>
+          <span id="drawer-arrow">▼</span>
+        </div>
+      </div>
+
+      <!-- Выпадающий список аккаунтов ботов -->
+      <div class="drawer-accounts-dropdown" id="drawer-accounts-list"></div>
+
+      <div class="drawer-menu-list">
+        <div class="drawer-item" onclick="openAddBotModal()">
+          <span class="drawer-item-icon">➕</span>
+          <span>Добавить Аккаунт</span>
+        </div>
+        <div class="drawer-item" onclick="openMyProfileFromDrawer()">
+          <span class="drawer-item-icon">👤</span>
+          <span>Мой Профиль</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -190,7 +237,7 @@
     </div>
   </div>
 
-  <!-- Модальное окно Профиля -->
+  <!-- Модальное окно Профиля Пользователя / Моего Профиля -->
   <div class="modal-overlay" id="profile-modal" onclick="closeProfileModal()">
     <div class="modal-card" onclick="event.stopPropagation()">
       <div class="profile-avatar-box" id="modal-avatar-box">U</div>
@@ -208,7 +255,26 @@
       </div>
 
       <a id="download-avatar-btn" href="#" target="_blank" download="avatar.jpg" style="display:none; margin-top:10px;" class="btn-primary">Сохранить аватарку (HQ)</a>
-      <button class="btn-primary" style="margin-top:10px; background:#242F3D;" onclick="closeProfileModal()">Закрыть</button>
+
+      <!-- Блок управления (для "Моего Профиля") -->
+      <div class="profile-actions" id="my-profile-tools" style="display:none;">
+        <button class="btn-primary" style="background:#242F3D;" onclick="openBackupModal()">💾 Резервные копии</button>
+        <button class="btn-primary" style="background:#242F3D;" id="profile-sound-btn" onclick="toggleGlobalSound()">🔔 Уведомления: Вкл</button>
+        <button class="btn-primary" style="background:#e53935;" onclick="clearAllData()">🗑️ Сбросить все данные</button>
+      </div>
+
+      <button class="btn-primary" style="margin-top:15px; background:#182533;" onclick="closeProfileModal()">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- Модальное окно Добавления Аккаунта -->
+  <div class="modal-overlay" id="add-account-modal" onclick="closeAddBotModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <h3>Добавить бота</h3>
+      <input type="text" id="drawer-token-input" placeholder="API Token бота" style="margin-top:15px;">
+      <input type="text" id="drawer-name-input" placeholder="Название аккаунта">
+      <button class="btn-primary" style="margin-top:10px;" onclick="addBotFromDrawer()">Сохранить</button>
+      <button class="btn-primary" style="margin-top:8px; background:none; color:#7F91A4;" onclick="closeAddBotModal()">Отмена</button>
     </div>
   </div>
 
@@ -234,15 +300,12 @@
   </div>
 
   <script>
-    /* --- ВЕЧНАЯ СИСТЕМА ХРАНЕНИЯ (ЗАЩИЩЕННАЯ ОТ СБРОСОВ) --- */
     const MASTER_STORAGE_KEY = 'bot_reader_chats_master';
 
-    // 1. Просим браузер НЕ чистить память этого сайта при нехватке места
     if (navigator.storage && navigator.storage.persist) {
       navigator.storage.persist();
     }
 
-    // 2. Безопасная загрузка без риска затирания пустой базой
     function loadMasterDB() {
       try {
         const raw = localStorage.getItem(MASTER_STORAGE_KEY);
@@ -250,21 +313,16 @@
           const parsed = JSON.parse(raw);
           if (typeof parsed === 'object' && parsed !== null) return parsed;
         }
-      } catch(e) {
-        console.error("Ошибка чтения памяти:", e);
-      }
+      } catch(e) { console.error(e); }
       return {};
     }
 
-    // 3. Безопасная функция сохранения
     function saveDB() {
       try {
         if (db && typeof db === 'object') {
           localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(db));
         }
-      } catch(e) {
-        console.error("Ошибка сохранения в память:", e);
-      }
+      } catch(e) { console.error(e); }
     }
 
     let bots = [];
@@ -280,8 +338,137 @@
     let pollInterval = null;
     let isHistoryPushed = false;
     let bannerTimeout = null;
+    let isAccountsDropdownOpen = false;
 
-    /* --- РЕЗЕРВНОЕ КОПИРОВАНИЕ --- */
+    /* --- Поиск --- */
+    function toggleSearchBar() {
+      const container = document.getElementById('search-bar-container');
+      if (container.style.display === 'block') {
+        container.style.display = 'none';
+        document.getElementById('search-input').value = '';
+        renderDialogsList();
+      } else {
+        container.style.display = 'block';
+        document.getElementById('search-input').focus();
+      }
+    }
+
+    /* --- Управление Drawer (Боковым меню) --- */
+    function toggleDrawer() {
+      const drawer = document.getElementById('drawer-menu');
+      const overlay = document.getElementById('drawer-overlay');
+      const isOpen = drawer.classList.contains('open');
+
+      if (isOpen) {
+        drawer.classList.remove('open');
+        overlay.classList.remove('active');
+      } else {
+        updateDrawerHeaderUI();
+        drawer.classList.add('open');
+        overlay.classList.add('active');
+      }
+    }
+
+    function toggleAccountsDropdown() {
+      isAccountsDropdownOpen = !isAccountsDropdownOpen;
+      const list = document.getElementById('drawer-accounts-list');
+      const arrow = document.getElementById('drawer-arrow');
+
+      if (isAccountsDropdownOpen) {
+        renderAccountsDropdownList();
+        list.style.display = 'block';
+        arrow.innerText = '▲';
+      } else {
+        list.style.display = 'none';
+        arrow.innerText = '▼';
+      }
+    }
+
+    function updateDrawerHeaderUI() {
+      const currentBot = bots.find(b => b.token === activeBotToken) || { name: 'Админ аккаунт', avatar: null };
+      document.getElementById('drawer-bot-name').innerText = currentBot.name;
+      
+      const avatarBox = document.getElementById('drawer-bot-avatar');
+      if (currentBot.avatar) {
+        avatarBox.innerHTML = `<img src="${currentBot.avatar}">`;
+      } else {
+        avatarBox.innerText = currentBot.name.charAt(0).toUpperCase();
+      }
+    }
+
+    function renderAccountsDropdownList() {
+      const list = document.getElementById('drawer-accounts-list');
+      list.innerHTML = bots.map(b => {
+        const isActive = b.token === activeBotToken;
+        const letter = b.name.charAt(0).toUpperCase();
+        const avatarHtml = b.avatar ? `<img src="${b.avatar}">` : letter;
+
+        return `
+          <div class="drawer-item" onclick="switchBotFromDrawer('${b.token}')">
+            <div class="mini-avatar">${avatarHtml}</div>
+            <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(b.name)}</span>
+            ${isActive ? '<span class="active-check">✓</span>' : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function switchBotFromDrawer(token) {
+      activeBotToken = token;
+      localStorage.setItem('app_active_token', token);
+      toggleDrawer();
+      showDialogsScreen();
+    }
+
+    function openAddBotModal() {
+      toggleDrawer();
+      document.getElementById('add-account-modal').style.display = 'flex';
+    }
+
+    function closeAddBotModal() {
+      document.getElementById('add-account-modal').style.display = 'none';
+      document.getElementById('drawer-token-input').value = '';
+      document.getElementById('drawer-name-input').value = '';
+    }
+
+    function addBotFromDrawer() {
+      const token = document.getElementById('drawer-token-input').value.trim();
+      const name = document.getElementById('drawer-name-input').value.trim() || 'Бот ' + (bots.length + 1);
+      if (!token) return alert('Введите токен');
+      if (bots.some(b => b.token === token)) return alert('Этот бот уже добавлен');
+
+      bots.push({ name, token });
+      localStorage.setItem('app_bots', JSON.stringify(bots));
+      activeBotToken = token;
+      localStorage.setItem('app_active_token', token);
+
+      closeAddBotModal();
+      showDialogsScreen();
+    }
+
+    function openMyProfileFromDrawer() {
+      toggleDrawer();
+      const currentBot = bots.find(b => b.token === activeBotToken) || { name: 'Мой Профиль', token: activeBotToken };
+      
+      const avatarBox = document.getElementById('modal-avatar-box');
+      if (currentBot.avatar) {
+        avatarBox.innerHTML = `<img src="${currentBot.avatar}">`;
+      } else {
+        avatarBox.innerText = currentBot.name.charAt(0).toUpperCase();
+      }
+
+      document.getElementById('modal-name').innerText = currentBot.name;
+      document.getElementById('modal-username').innerText = 'Бот Аккаунт';
+      document.getElementById('modal-id-val').innerText = currentBot.token.slice(0, 10) + '...';
+      document.getElementById('download-avatar-btn').style.display = 'none';
+
+      document.getElementById('my-profile-tools').style.display = 'flex';
+      updateGlobalSoundUI();
+
+      document.getElementById('profile-modal').style.display = 'flex';
+    }
+
+    /* --- Резервное копирование --- */
     function openBackupModal() { document.getElementById('backup-modal').style.display = 'flex'; }
     function closeBackupModal() { document.getElementById('backup-modal').style.display = 'none'; }
 
@@ -302,8 +489,7 @@
       const reader = new FileReader();
       reader.onload = function(e) {
         try {
-          const importedDB = JSON.parse(e.target.result);
-          db = importedDB;
+          db = JSON.parse(e.target.result);
           saveDB();
           alert('База данных успешно импортирована!');
           closeBackupModal();
@@ -318,10 +504,7 @@
     /* --- Оповещения --- */
     function triggerNotificationAlert() {
       if (!globalSoundEnabled) return;
-
-      if ("vibrate" in navigator) {
-        navigator.vibrate([200, 100, 200]);
-      }
+      if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
 
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -346,7 +529,8 @@
     }
 
     function updateGlobalSoundUI() {
-      document.getElementById('global-sound-btn').innerText = globalSoundEnabled ? '🔔' : '🔕';
+      const btn = document.getElementById('profile-sound-btn');
+      if (btn) btn.innerText = globalSoundEnabled ? '🔔 Уведомления: Вкл' : '🔕 Уведомления: Выкл';
     }
 
     /* --- Кнопка "Назад" --- */
@@ -367,7 +551,7 @@
       }
     };
 
-    /* --- Управление ботами --- */
+    /* --- Авторизация --- */
     function addBot() {
       const token = document.getElementById('token-input').value.trim();
       const name = document.getElementById('bot-name-input').value.trim() || 'Бот ' + (bots.length + 1);
@@ -400,13 +584,6 @@
       `).join('');
     }
 
-    function openBotSelector() {
-      clearInterval(pollInterval);
-      document.getElementById('dialogs-screen').style.display = 'none';
-      document.getElementById('auth-screen').style.display = 'flex';
-      renderAuthBotsList();
-    }
-
     /* --- Чаты и получение обновлений --- */
     function showDialogsScreen() {
       document.getElementById('auth-screen').style.display = 'none';
@@ -419,6 +596,22 @@
 
       renderDialogsList();
       startPolling();
+      fetchBotProfileAvatar();
+    }
+
+    async function fetchBotProfileAvatar() {
+      try {
+        const res = await fetch(`https://api.telegram.org/bot${activeBotToken}/getMe`);
+        const data = await res.json();
+        if (data.ok) {
+          const avatarUrl = await fetchUserAvatar(data.result.id);
+          const currentBot = bots.find(b => b.token === activeBotToken);
+          if (currentBot && avatarUrl) {
+            currentBot.avatar = avatarUrl;
+            localStorage.setItem('app_bots', JSON.stringify(bots));
+          }
+        }
+      } catch(e) {}
     }
 
     function startPolling() {
@@ -451,7 +644,6 @@
       }
     }
 
-    /* --- Аватарка HQ --- */
     async function fetchUserAvatar(userId) {
       try {
         const res = await fetch(`https://api.telegram.org/bot${activeBotToken}/getUserProfilePhotos?user_id=${userId}&limit=1`);
@@ -594,7 +786,7 @@
       }).join('');
     }
 
-    /* --- Отрисовка комнаты чата --- */
+    /* --- Комната чата --- */
     function openChatRoom(chatId) {
       currentChatId = String(chatId);
       const chat = db[activeBotToken][chatId];
@@ -730,7 +922,7 @@
       closeContextMenu();
     }
 
-    /* --- МОДАЛЬНОЕ ОКНО И ЛОГИКА УДАЛЕНИЯ --- */
+    /* --- Удаление --- */
     function openDeleteModal() {
       closeContextMenu();
       document.getElementById('delete-modal').style.display = 'flex';
@@ -771,7 +963,7 @@
       selectedContextMsgId = null;
     }
 
-    /* --- НАТИВНАЯ ПЕРЕСЫЛКА Telegram --- */
+    /* --- Пересылка --- */
     function openForwardModal() {
       const msgId = selectedContextMsgId;
       closeContextMenu();
@@ -835,7 +1027,7 @@
       selectedContextMsgId = null;
     }
 
-    /* --- Профиль пользователя и сохранение аватарки --- */
+    /* --- Профиль собеседника --- */
     function openUserProfile() {
       if (!currentChatId) return;
       const chat = db[activeBotToken][currentChatId];
@@ -855,6 +1047,7 @@
       document.getElementById('modal-name').innerText = chat.user.name;
       document.getElementById('modal-username').innerText = chat.user.username;
       document.getElementById('modal-id-val').innerText = chat.user.id || currentChatId;
+      document.getElementById('my-profile-tools').style.display = 'none';
 
       document.getElementById('profile-modal').style.display = 'flex';
     }
@@ -872,7 +1065,7 @@
       });
     }
 
-    /* --- Ответ на сообщение --- */
+    /* --- Отправка сообщений --- */
     function setReplyQuote(msgId, text) {
       selectedReplyMsgId = msgId;
       document.getElementById('reply-preview-text').innerText = text;
@@ -934,7 +1127,7 @@
       if (e.key === 'Enter') sendReply();
     }
 
-    /* --- Управление чатом --- */
+    /* --- Доп. опции чата --- */
     function toggleMuteChat() {
       if (!currentChatId) return;
       const chat = db[activeBotToken][currentChatId];
@@ -956,7 +1149,7 @@
     }
 
     function clearAllData() {
-      if (confirm('Сбросить все сохранённые данные?')) {
+      if (confirm('Сбросить все сохранённые данные и аккаунты?')) {
         localStorage.clear();
         location.reload();
       }
