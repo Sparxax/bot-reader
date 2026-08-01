@@ -26,7 +26,7 @@
     .btn-primary { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #5288C1; color: #fff; font-weight: 600; cursor: pointer; }
     .bot-list-item { background: #17212B; padding: 10px; margin: 6px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* Список диалогов (Главный экран) */
+    /* Список диалогов */
     #dialogs-screen { display: none; flex-direction: column; height: 100%; }
     .chat-list { flex: 1; overflow-y: auto; }
     .chat-item { display: flex; align-items: center; padding: 12px 16px; background: #17212B; border-bottom: 1px solid #0E1621; cursor: pointer; }
@@ -48,10 +48,10 @@
     .msg-out { background: #2B5278; align-self: flex-end; border-bottom-right-radius: 2px; }
     .msg-meta { font-size: 10px; color: #7F91A4; text-align: right; margin-top: 4px; }
 
-    /* Вложенный ответ внутри сообщения */
+    /* Вложенный ответ */
     .reply-quote { background: rgba(0,0,0,0.2); border-left: 3px solid #64B5F6; padding: 4px 8px; margin-bottom: 6px; border-radius: 4px; font-size: 12px; color: #B0BEC5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* Плашка ответа над полем ввода */
+    /* Плашка ответа */
     #reply-preview-bar { display: none; background: #17212B; padding: 6px 12px; border-top: 1px solid #0B1118; border-left: 3px solid #64B5F6; align-items: center; justify-content: space-between; font-size: 12px; }
     #reply-preview-text { color: #B0BEC5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%; }
 
@@ -94,7 +94,7 @@
   <!-- 3. Экран комнаты чата -->
   <div id="chat-room">
     <header>
-      <button class="icon-btn" onclick="goBackToDialogs()">◀ Назад</button>
+      <button class="icon-btn" onclick="triggerHardwareBack()">◀ Назад</button>
       <div style="flex:1; margin-left:10px;">
         <div class="header-title" id="room-user-name">Пользователь</div>
         <div class="header-subtitle" id="room-user-username">@username</div>
@@ -105,7 +105,6 @@
 
     <div class="messages-container" id="room-messages"></div>
 
-    <!-- Плашка при ответе на конкретное сообщение -->
     <div id="reply-preview-bar">
       <div>
         <div style="color: #64B5F6; font-weight: bold;">Ответ на сообщение:</div>
@@ -129,12 +128,19 @@
     let selectedReplyMsgId = null;
     let pollInterval = null;
 
-    /* --- Обработка кнопки «Назад» телефона --- */
-    window.addEventListener('popstate', (e) => {
+    /* --- ИСПРАВЛЕНИЕ: Системная кнопка "Назад" смартфона --- */
+    window.addEventListener('popstate', (event) => {
       if (currentChatId) {
+        // Закрываем окно чата без вылета из приложения
         closeChatRoomUI();
       }
     });
+
+    function triggerHardwareBack() {
+      if (currentChatId) {
+        history.back(); // Вызывает виртуальный запуск popstate
+      }
+    }
 
     window.onload = () => {
       if ("Notification" in window && Notification.permission !== "granted") {
@@ -265,7 +271,6 @@
 
         botDb[chatId].messages.push(newMsg);
 
-        // Увеличиваем счетчик непрочитанных, если открыт другой чат
         if (currentChatId !== String(chatId)) {
           botDb[chatId].unreadCount = (botDb[chatId].unreadCount || 0) + 1;
         }
@@ -321,7 +326,6 @@
       currentChatId = String(chatId);
       const chat = db[activeBotToken][chatId];
 
-      // Сбрасываем счетчик непрочитанных при входе
       chat.unreadCount = 0;
       saveDB();
 
@@ -332,14 +336,8 @@
       renderMessagesInRoom(chatId);
       document.getElementById('chat-room').style.display = 'flex';
 
-      // Добавляем запись в историю для корректной работы системной кнопки "Назад"
-      history.pushState({ page: 'chat' }, '', '#chat');
-    }
-
-    function goBackToDialogs() {
-      if (currentChatId) {
-        history.back(); // Вызывает событие popstate, закрывающее чат
-      }
+      // Пушим новое состояние в историю, чтобы перехватывать встроенную кнопку «Назад»
+      history.pushState({ inChat: true }, '', '#chat');
     }
 
     function closeChatRoomUI() {
@@ -389,7 +387,6 @@
         text: text
       };
 
-      // Если выбран ответ на конкретное сообщение
       if (selectedReplyMsgId) {
         payload.reply_to_message_id = selectedReplyMsgId;
       }
@@ -452,7 +449,7 @@
       if (confirm('Удалить этот чат с устройства?')) {
         delete db[activeBotToken][currentChatId];
         saveDB();
-        goBackToDialogs();
+        triggerHardwareBack();
       }
     }
 
