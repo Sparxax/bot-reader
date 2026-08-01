@@ -55,7 +55,10 @@
     .msg-meta { font-size: 10px; color: #7F91A4; text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
     .reaction-badge { font-size: 12px; background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 8px; margin-right: auto; }
 
+    /* Блоки цитат и пересылки в стиле Telegram */
     .reply-quote { background: rgba(0,0,0,0.2); border-left: 3px solid #64B5F6; padding: 4px 8px; margin-bottom: 6px; border-radius: 4px; font-size: 12px; color: #B0BEC5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .forward-quote { border-left: 3px solid #64B5F6; padding-left: 6px; margin-bottom: 4px; }
+    .forward-header { font-size: 11px; color: #64B5F6; font-weight: 600; margin-bottom: 2px; }
 
     #reply-preview-bar { display: none; background: #17212B; padding: 6px 12px; border-top: 1px solid #0B1118; border-left: 3px solid #64B5F6; align-items: center; justify-content: space-between; font-size: 12px; }
     #reply-preview-text { color: #B0BEC5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%; }
@@ -63,8 +66,8 @@
     .input-bar { background: #17212B; padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #0B1118; }
     .input-bar input { flex: 1; margin: 0; }
 
-    /* Контекстное меню */
-    .context-menu-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+    /* Контекстные и Модальные окна */
+    .context-menu-overlay, .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 100; align-items: center; justify-content: center; }
     .context-menu { background: #17212B; border-radius: 12px; width: 280px; padding: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
     .reactions-bar { display: flex; justify-content: space-around; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid #242F3D; font-size: 22px; }
     .reaction-btn { cursor: pointer; transition: transform 0.1s; }
@@ -72,19 +75,15 @@
     .context-item { padding: 10px 12px; color: #fff; font-size: 15px; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 10px; }
     .context-item:active { background: #242F3D; }
 
-    /* Модальные окна */
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 110; align-items: center; justify-content: center; }
     .modal-card { background: #17212B; width: 320px; border-radius: 12px; padding: 20px; text-align: center; }
-    
     .profile-avatar-box { width: 100px; height: 100px; border-radius: 50%; background: #5288C1; font-size: 36px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; overflow: hidden; }
     .profile-avatar-box img { width: 100%; height: 100%; object-fit: cover; }
-    
     .copyable-field { padding: 8px; border-radius: 6px; cursor: pointer; transition: background 0.2s; margin-bottom: 4px; }
     .copyable-field:active { background: #242F3D; }
 
     .empty-state { text-align: center; color: #7F91A4; margin-top: 50px; font-size: 14px; }
     
-    /* Тосты и Всплывающие Баннеры Уведомлений */
+    /* Тосты и Баннеры */
     #notification-banner { display: none; position: fixed; top: 10px; left: 10px; right: 10px; background: #242F3D; color: #fff; padding: 12px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 300; align-items: center; justify-content: space-between; border-left: 4px solid #64B5F6; }
     #toast { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 200; }
   </style>
@@ -93,7 +92,6 @@
 
   <div id="toast">Скопировано!</div>
 
-  <!-- Всплывающий баннер входящих сообщений внутри приложения -->
   <div id="notification-banner">
     <div>
       <div id="notif-title" style="font-weight: bold; font-size: 14px;">Имя</div>
@@ -122,7 +120,6 @@
         <div class="header-subtitle" id="status-text">Соединение...</div>
       </div>
       <div>
-        <!-- Общая кнопка вкл/выкл звука и вибрации -->
         <button class="icon-btn" id="global-sound-btn" onclick="toggleGlobalSound()" title="Глобальный звук и вибрация">🔔</button>
         <button class="icon-btn" onclick="clearAllData()" title="Сбросить всё">🗑️</button>
       </div>
@@ -165,7 +162,7 @@
     </div>
   </div>
 
-  <!-- Контекстное меню -->
+  <!-- Контекстное меню для сообщений -->
   <div class="context-menu-overlay" id="context-menu-overlay" onclick="closeContextMenu()">
     <div class="context-menu" onclick="event.stopPropagation()">
       <div class="reactions-bar">
@@ -178,7 +175,17 @@
       </div>
       <div class="context-item" onclick="contextReply()">↩️ Ответить</div>
       <div class="context-item" onclick="openForwardModal()">↪️ Переслать</div>
-      <div class="context-item" style="color:#e53935;" onclick="contextDelete()">🗑️ Удалить</div>
+      <div class="context-item" style="color:#e53935;" onclick="openDeleteModal()">🗑️ Удалить...</div>
+    </div>
+  </div>
+
+  <!-- Модальное окно Выбора способа удаления -->
+  <div class="modal-overlay" id="delete-modal" onclick="closeDeleteModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <h3>Удаление сообщения</h3>
+      <p style="font-size:13px; color:#7F91A4; margin: 10px 0 20px 0;">Выберите, где удалить выбранное сообщение:</p>
+      <button class="btn-primary" style="margin-bottom:10px;" onclick="executeDelete(false)">Удалить только у себя</button>
+      <button class="btn-primary" style="background:#e53935;" onclick="executeDelete(true)">Удалить у всех</button>
     </div>
   </div>
 
@@ -216,7 +223,7 @@
   <script>
     let bots = JSON.parse(localStorage.getItem('app_bots') || '[]');
     let activeBotToken = localStorage.getItem('app_active_token') || '';
-    let db = JSON.parse(localStorage.getItem('app_db_v5') || '{}'); 
+    let db = JSON.parse(localStorage.getItem('app_db_v6') || '{}'); 
     let globalSoundEnabled = localStorage.getItem('app_global_sound') !== 'false';
 
     let currentChatId = null;
@@ -226,16 +233,14 @@
     let isHistoryPushed = false;
     let bannerTimeout = null;
 
-    /* --- Воспроизведение звука и вибрации на телефоне --- */
+    /* --- Оповещения --- */
     function triggerNotificationAlert() {
       if (!globalSoundEnabled) return;
 
-      // 1. Вибрация корпуса устройства (для телефонов)
       if ("vibrate" in navigator) {
         navigator.vibrate([200, 100, 200]);
       }
 
-      // 2. Звуковой сигнал через динамик
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = ctx.createOscillator();
@@ -262,7 +267,7 @@
       document.getElementById('global-sound-btn').innerText = globalSoundEnabled ? '🔔' : '🔕';
     }
 
-    /* --- Обработка кнопки "Назад" --- */
+    /* --- Кнопка "Назад" --- */
     window.addEventListener('popstate', () => {
       if (currentChatId) closeChatRoomUI();
     });
@@ -364,7 +369,7 @@
       }
     }
 
-    /* --- Загрузка АВАТАРКИ В ВЫСОКОМ КАЧЕСТВЕ (HQ) --- */
+    /* --- Аватарка HQ --- */
     async function fetchUserAvatar(userId) {
       try {
         const res = await fetch(`https://api.telegram.org/bot${activeBotToken}/getUserProfilePhotos?user_id=${userId}&limit=1`);
@@ -372,7 +377,6 @@
 
         if (data.ok && data.result.photos.length > 0) {
           const photoSizes = data.result.photos[0];
-          // Беру самый ПОСЛЕДНИЙ элемент массива - это самое высокое качество изображения!
           const maxQualityFileId = photoSizes[photoSizes.length - 1].file_id;
           
           const fileRes = await fetch(`https://api.telegram.org/bot${activeBotToken}/getFile?file_id=${maxQualityFileId}`);
@@ -404,17 +408,27 @@
         };
       }
 
-      // Загружаем аватарку высокого разрешения, если ее еще нет
       if (!botDb[chatId].user.avatar) {
         botDb[chatId].user.avatar = await fetchUserAvatar(msg.from.id);
       }
 
       const isDuplicate = botDb[chatId].messages.some(m => m.id === msg.message_id);
       if (!isDuplicate) {
+        // Определение переслано ли входящее сообщение из Telegram
+        let forwardFrom = null;
+        if (msg.forward_from) {
+          forwardFrom = `${msg.forward_from.first_name || ''} ${msg.forward_from.last_name || ''}`.trim();
+        } else if (msg.forward_from_chat) {
+          forwardFrom = msg.forward_from_chat.title || 'Канала';
+        } else if (msg.forward_sender_name) {
+          forwardFrom = msg.forward_sender_name;
+        }
+
         const newMsg = {
           id: msg.message_id,
           type: 'in',
           text: msg.text || '[Медиа/Вложение]',
+          forwardFrom: forwardFrom,
           replyToText: msg.reply_to_message ? (msg.reply_to_message.text || '[Вложение]') : null,
           reaction: null,
           time: new Date(msg.date * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -422,7 +436,6 @@
 
         botDb[chatId].messages.push(newMsg);
 
-        // Уведомления и вибрация
         if (currentChatId !== String(chatId)) {
           botDb[chatId].unreadCount = (botDb[chatId].unreadCount || 0) + 1;
           
@@ -447,7 +460,7 @@
       document.getElementById('notification-banner').style.display = 'none';
     }
 
-    /* --- Рендер списка диалогов --- */
+    /* --- Отрисовка диалогов --- */
     function renderDialogsList() {
       const container = document.getElementById('dialogs-container');
       const searchQuery = (document.getElementById('search-input').value || '').toLowerCase();
@@ -500,7 +513,7 @@
       }).join('');
     }
 
-    /* --- Комната чата --- */
+    /* --- Отрисовка комнаты чата --- */
     function openChatRoom(chatId) {
       currentChatId = String(chatId);
       const chat = db[activeBotToken][chatId];
@@ -539,6 +552,11 @@
       container.innerHTML = chat.messages.map(m => `
         <div class="msg-wrapper" data-id="${m.id}">
           <div class="msg-bubble ${m.type === 'in' ? 'msg-in' : 'msg-out'}">
+            ${m.forwardFrom ? `
+              <div class="forward-quote">
+                <div class="forward-header">Переслано от ${escapeHtml(m.forwardFrom)}</div>
+              </div>
+            ` : ''}
             ${m.replyToText ? `<div class="reply-quote">${escapeHtml(m.replyToText)}</div>` : ''}
             <div>${escapeHtml(m.text)}</div>
             <div class="msg-meta">
@@ -553,7 +571,6 @@
       attachMessageEvents();
     }
 
-    /* --- Обработка клика/жестов --- */
     function attachMessageEvents() {
       const wrappers = document.querySelectorAll('.msg-wrapper');
 
@@ -609,7 +626,6 @@
     }
 
     function closeContextMenu() {
-      selectedContextMsgId = null;
       document.getElementById('context-menu-overlay').style.display = 'none';
     }
 
@@ -633,16 +649,50 @@
       closeContextMenu();
     }
 
-    function contextDelete() {
+    /* --- МОДАЛЬНОЕ ОКНО И ЛОГИКА УДАЛЕНИЯ --- */
+    function openDeleteModal() {
+      closeContextMenu();
+      document.getElementById('delete-modal').style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('delete-modal').style.display = 'none';
+    }
+
+    async function executeDelete(forEveryone) {
       if (!selectedContextMsgId || !currentChatId) return;
       const chat = db[activeBotToken][currentChatId];
+
+      if (forEveryone) {
+        // Отправка запроса на удаление сообщения у обеих сторон в Telegram
+        try {
+          const res = await fetch(`https://api.telegram.org/bot${activeBotToken}/deleteMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: currentChatId, message_id: selectedContextMsgId })
+          });
+          const data = await res.json();
+          if (!data.ok) {
+            alert('Не удалось удалить у собеседника: ' + data.description);
+            closeDeleteModal();
+            return;
+          }
+        } catch(e) {
+          alert('Ошибка соединения при попытке удаления у всех');
+          closeDeleteModal();
+          return;
+        }
+      }
+
+      // Удаление локально из памяти приложения
       chat.messages = chat.messages.filter(m => m.id !== selectedContextMsgId);
       saveDB();
       renderMessagesInRoom(currentChatId);
-      closeContextMenu();
+      closeDeleteModal();
+      selectedContextMsgId = null;
     }
 
-    /* --- Пересылка сообщений --- */
+    /* --- НАТИВНАЯ ПЕРЕСЫЛКА Telegram --- */
     function openForwardModal() {
       const msgId = selectedContextMsgId;
       closeContextMenu();
@@ -666,39 +716,48 @@
 
     async function executeForward(targetChatId) {
       if (!selectedContextMsgId || !currentChatId) return;
+      
       const sourceChat = db[activeBotToken][currentChatId];
-      const msg = sourceChat.messages.find(m => m.id === selectedContextMsgId);
+      const msgToForward = sourceChat.messages.find(m => m.id === selectedContextMsgId);
+      if (!msgToForward) return;
 
-      if (msg) {
-        const textToSend = `[Переслано]: ${msg.text}`;
-        const url = `https://api.telegram.org/bot${activeBotToken}/sendMessage`;
+      // Вызов метода forwardMessage API Telegram
+      const url = `https://api.telegram.org/bot${activeBotToken}/forwardMessage`;
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: targetChatId,
+            from_chat_id: currentChatId,
+            message_id: selectedContextMsgId
+          })
+        });
 
-        try {
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: targetChatId, text: textToSend })
+        const data = await res.json();
+        if (data.ok) {
+          const targetChat = db[activeBotToken][targetChatId];
+          targetChat.messages.push({
+            id: data.result.message_id,
+            type: 'out',
+            text: msgToForward.text,
+            forwardFrom: sourceChat.user.name, // Имя отправителя для плашки пересылки
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           });
-          const data = await res.json();
-          if (data.ok) {
-            const targetChat = db[activeBotToken][targetChatId];
-            targetChat.messages.push({
-              id: data.result.message_id,
-              type: 'out',
-              text: textToSend,
-              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            });
-            saveDB();
-            alert('Сообщение переслано');
-          }
-        } catch (e) {
-          alert('Ошибка пересылки');
+          saveDB();
+          alert('Сообщение успешно переслано!');
+        } else {
+          alert('Ошибка пересылки: ' + data.description);
         }
+      } catch (e) {
+        alert('Ошибка при отправке запроса пересылки');
       }
+
       closeForwardModal();
+      selectedContextMsgId = null;
     }
 
-    /* --- Окно профиля пользователя и скачивание аватара --- */
+    /* --- Профиль пользователя и сохранение аватарки --- */
     function openUserProfile() {
       if (!currentChatId) return;
       const chat = db[activeBotToken][currentChatId];
@@ -735,7 +794,7 @@
       });
     }
 
-    /* --- Ответ на конкретное сообщение --- */
+    /* --- Ответ на сообщение --- */
     function setReplyQuote(msgId, text) {
       selectedReplyMsgId = msgId;
       document.getElementById('reply-preview-text').innerText = text;
@@ -797,7 +856,7 @@
       if (e.key === 'Enter') sendReply();
     }
 
-    /* --- Настройки чата --- */
+    /* --- Управление чатом --- */
     function toggleMuteChat() {
       if (!currentChatId) return;
       const chat = db[activeBotToken][currentChatId];
@@ -826,7 +885,7 @@
     }
 
     function saveDB() {
-      localStorage.setItem('app_db_v5', JSON.stringify(db));
+      localStorage.setItem('app_db_v6', JSON.stringify(db));
     }
 
     function escapeHtml(text) {
