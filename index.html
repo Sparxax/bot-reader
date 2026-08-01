@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Bot Reader</title>
+  
+  <!-- Подключение манифеста для работы как PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#242F3D">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #1D2733;
+      color: #FFFFFF;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Шапка приложения */
+    header {
+      background-color: #242F3D;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #10171D;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    header .title {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    header .subtitle {
+      font-size: 12px;
+      color: #7F91A4;
+    }
+
+    .btn-icon {
+      background: none;
+      border: none;
+      color: #7F91A4;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    /* Экран входа */
+    #auth-screen {
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .auth-box {
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .auth-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #2B3644;
+      background-color: #242F3D;
+      color: #fff;
+      font-size: 15px;
+      margin-top: 16px;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: #5288C1;
+    }
+
+    .btn-main {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      background-color: #5288C1;
+      color: #fff;
+      font-weight: 600;
+      font-size: 16px;
+      margin-top: 16px;
+      cursor: pointer;
+    }
+
+    .btn-main:active {
+      background-color: #4370A1;
+    }
+
+    /* Чат с сообщениями */
+    #chat-screen {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    #message-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column-reverse; /* Новые сообщения снизу */
+      gap: 8px;
+    }
+
+    /* Бабблы сообщений Telegram */
+    .msg-bubble {
+      background-color: #182533;
+      padding: 8px 12px;
+      border-radius: 12px 12px 12px 2px;
+      max-width: 80%;
+      align-self: flex-start;
+      word-wrap: break-word;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .msg-author {
+      color: #64B5F6;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .msg-text {
+      font-size: 15px;
+      line-height: 1.3;
+    }
+
+    .msg-time {
+      font-size: 10px;
+      color: #7F91A4;
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #7F91A4;
+      margin-top: 40px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Экран 1: Ввод API Токена -->
+  <div id="auth-screen">
+    <div class="auth-box">
+      <div class="auth-icon">🤖</div>
+      <h2>Подключение бота</h2>
+      <p style="color: #7F91A4; font-size: 14px; margin-top: 8px;">
+        Введите API-токен вашей системы, полученный у @BotFather
+      </p>
+      <input type="text" id="token-input" placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ">
+      <button class="btn-main" onclick="saveToken()">Подключиться</button>
+    </div>
+  </div>
+
+  <!-- Экран 2: Список сообщений бота -->
+  <div id="chat-screen">
+    <header>
+      <div>
+        <div class="title">Входящие сообщения</div>
+        <div class="subtitle" id="status-text">Обновление...</div>
+      </div>
+      <button class="btn-icon" onclick="logout()" title="Сменить токен">🚪</button>
+    </header>
+
+    <div id="message-list">
+      <div class="empty-state">Ожидание новых сообщений...</div>
+    </div>
+  </div>
+
+  <script>
+    let botToken = localStorage.getItem('tg_bot_token') || '';
+    let lastUpdateId = 0;
+    let pollInterval = null;
+
+    // Авто-вход, если токен сохранен
+    window.onload = () => {
+      if (botToken) {
+        showChatScreen();
+      }
+    };
+
+    function saveToken() {
+      const input = document.getElementById('token-input').value.trim();
+      if (input) {
+        botToken = input;
+        localStorage.setItem('tg_bot_token', botToken);
+        showChatScreen();
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('tg_bot_token');
+      botToken = '';
+      clearInterval(pollInterval);
+      document.getElementById('chat-screen').style.display = 'none';
+      document.getElementById('auth-screen').style.display = 'flex';
+    }
+
+    function showChatScreen() {
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('chat-screen').style.display = 'flex';
+      fetchMessages();
+      // Опрос API Telegram каждые 3 секунды
+      pollInterval = setInterval(fetchMessages, 3000);
+    }
+
+    async function fetchMessages() {
+      if (!botToken) return;
+
+      const url = `https://api.telegram.org/bot${botToken}/getUpdates?offset=${lastUpdateId + 1}`;
+      
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.ok && data.result.length > 0) {
+          const list = document.getElementById('message-list');
+          
+          // Удаляем надпись "Ожидание..."
+          const emptyState = list.querySelector('.empty-state');
+          if (emptyState) emptyState.remove();
+
+          data.result.forEach(update => {
+            if (update.message) {
+              renderMessage(update.message);
+            }
+            lastUpdateId = update.update_id;
+          });
+        }
+        document.getElementById('status-text').innerText = 'Онлайн (обновлено)';
+      } catch (err) {
+        document.getElementById('status-text').innerText = 'Ошибка соединения';
+      }
+    }
+
+    function renderMessage(msg) {
+      const list = document.getElementById('message-list');
+      
+      const from = msg.from || {};
+      const name = `${from.first_name || ''} ${from.last_name || ''}`.trim() || 'Пользователь';
+      const username = from.username ? `@${from.username}` : 'без юзернейма';
+      const text = msg.text || '[Медиа/Файл/Вложение]';
+      
+      const date = new Date((msg.date || 0) * 1000);
+      const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      const bubble = document.createElement('div');
+      bubble.className = 'msg-bubble';
+      bubble.innerHTML = `
+        <div class="msg-author">${escapeHtml(name)} (${username})</div>
+        <div class="msg-text">${escapeHtml(text)}</div>
+        <div class="msg-time">${timeStr}</div>
+      `;
+
+      // Вставляем наверх контейнера (так как flex-direction: column-reverse)
+      list.insertBefore(bubble, list.firstChild);
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+  </script>
+</body>
+</html>
