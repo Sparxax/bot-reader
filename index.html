@@ -80,15 +80,15 @@
     .input-bar { padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
     .input-bar input { flex: 1; margin: 0; background: transparent; border: none; color: #fff; font-size: 15px; padding: 6px 0; outline: none; user-select: text; }
 
-    /* Стилшиты для APPLE EMOJI PICKER */
+    /* Стилшиты для APPLE EMOJI & STICKERS PICKER */
     .apple-emoji-img { width: 28px; height: 28px; object-fit: contain; pointer-events: none; }
     .apple-tab-img { width: 22px; height: 22px; object-fit: contain; pointer-events: none; }
 
     .emoji-picker-container { display: none; flex-direction: column; height: 320px; background: #17212B; border-top: 1px solid #0B1118; }
     .emoji-search-box { padding: 6px 10px; background: #131C24; border-bottom: 1px solid #0B1118; }
     .emoji-search-box input { width: 100%; background: #242F3D; border: none; border-radius: 16px; padding: 6px 12px; color: #fff; font-size: 13px; outline: none; }
-    .emoji-categories-tabs { display: flex; justify-content: space-around; background: #17212B; border-bottom: 1px solid #0B1118; padding: 6px 0; overflow-x: auto; }
-    .emoji-tab-btn { background: none; border: none; cursor: pointer; opacity: 0.5; padding: 4px 8px; border-radius: 6px; transition: opacity 0.2s, background 0.2s; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .emoji-categories-tabs { display: flex; justify-content: space-between; background: #17212B; border-bottom: 1px solid #0B1118; padding: 6px 8px; overflow-x: auto; }
+    .emoji-tab-btn { background: none; border: none; cursor: pointer; opacity: 0.5; padding: 4px 6px; border-radius: 6px; transition: opacity 0.2s, background 0.2s; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
     .emoji-tab-btn.active { opacity: 1; background: #242F3D; }
     .emoji-grid-scroll { flex: 1; padding: 8px; display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; overflow-y: auto; align-content: start; justify-items: center; }
     .emoji-item { cursor: pointer; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: transform 0.1s, background 0.1s; }
@@ -96,10 +96,10 @@
     .emoji-item:active { transform: scale(1.25); }
 
     /* СТИКЕРЫ */
-    .sticker-item { cursor: pointer; width: 68px; height: 68px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: rgba(255,255,255,0.03); transition: transform 0.15s, background 0.15s; }
+    .sticker-item { cursor: pointer; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: rgba(255,255,255,0.03); transition: transform 0.15s, background 0.15s; }
     .sticker-item:hover { background: #242F3D; }
     .sticker-item:active { transform: scale(1.1); }
-    .sticker-item img { width: 56px; height: 56px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+    .sticker-item img { width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
 
     /* Оверлеи и меню */
     .recording-overlay { display: none; flex: 1; align-items: center; color: #e53935; font-size: 14px; font-weight: bold; }
@@ -328,21 +328,48 @@
       return `https://emojicdn.elk.sh/${encodeURIComponent(char)}?style=apple`;
     }
 
-    /* БАЗА APPLE EMOJI & STICKERS (Сгруппировано как в Telegram iOS) */
+    /* РАЗДЕЛЕННАЯ БАЗА APPLE EMOJI & iOS STICKERS */
     const APPLE_EMOJI_DATA = [
       {
         id: "smileys", name: "Смайлы", icon: "😀",
         emojis: [
-          { char: "😀", name: "улыбка" }, { char: "😃", name: "счастье" }, { char: "😄", name: "смех" }, { char: "😁", name: "зубы" },
-          { char: "😆", name: "зажмурился" }, { char: "😅", name: "пот от смеха" }, { char: "😂", name: "слезы радости" }, { char: "🤣", name: "рофл" },
-          { char: "😊", name: "довольный" }, { char: "😇", name: "ангел" }, { char: "🙂", name: "улыбка" }, { char: "🙃", name: "перевернутый" },
+          { char: "😀", name: "улыбка" }, { char: "😃", name: "радость" }, { char: "😄", name: "смех" }, { char: "😁", name: "зубы" },
+          { char: "😆", name: "зажмурился" }, { char: "😅", name: "пот" }, { char: "😂", name: "слезы" }, { char: "🤣", name: "рофл" },
+          { char: "😊", name: "довольный" }, { char: "😇", name: "ангел" }, { char: "🙂", name: "легкая улыбка" }, { char: "🙃", name: "перевернутый" },
           { char: "😉", name: "подмигивание" }, { char: "😌", name: "облегчение" }, { char: "😍", name: "влюблен" }, { char: "🥰", name: "сердечки" },
-          { char: "😘", name: "поцелуй" }, { char: "😋", name: "ням" }, { char: "😛", name: "язык" }, { char: "😜", name: "прикол" },
-          { char: "🤪", name: "дурачество" }, { char: "🤑", name: "деньги" }, { char: "🤗", name: "обнимашки" }, { char: "🤭", name: "хихикает" },
+          { char: "😘", name: "поцелуй" }, { char: "😗", name: "чмок" }, { char: "😙", name: "поцелуй со смехом" }, { char: "😚", name: "глаза закрыты" },
+          { char: "😋", name: "ням" }, { char: "😛", name: "язык" }, { char: "😜", name: "прикол" }, { char: "🤪", name: "дурачество" },
+          { char: "😝", name: "зажмурился язык" }, { char: "🤑", name: "деньги" }, { char: "🤗", name: "обнимашки" }, { char: "🤭", name: "хихикает" },
           { char: "🤫", name: "тихо" }, { char: "🤔", name: "задумался" }, { char: "🤐", name: "молчу" }, { char: "🤨", name: "сомнение" },
-          { char: "😐", name: "покерфейс" }, { char: "😎", name: "крутой" }, { char: "🥳", name: "праздник" }, { char: "😭", name: "плач" },
-          { char: "😱", name: "шок" }, { char: "🥺", name: "умоляет" }, { char: "🔥", name: "огонь" }, { char: "👍", name: "класс" },
-          { char: "👎", name: "дизлайк" }, { char: "❤️", name: "сердце" }, { char: "💔", name: "разбитое сердце" }, { char: "💩", name: "пооп" }
+          { char: "😐", name: "покерфейс" }, { char: "😑", name: "без эмоций" }, { char: "😶", name: "без рта" }, { char: "😏", name: "ухмылка" },
+          { char: "😒", name: "недоволен" }, { char: "🙄", name: "закатил глаза" }, { char: "grimacing", name: "гримаса" }, { char: "🤥", name: "вранье" },
+          { char: "😌", name: "вздох" }, { char: "😔", name: "грусть" }, { char: "😪", name: "сонный" }, { char: "🤤", name: "слюна" },
+          { char: "😴", name: "спит" }, { char: "😷", name: "маска" }, { char: "🤒", name: "градусник" }, { char: "🤕", name: "бинты" },
+          { char: "🤢", name: "тошнота" }, { char: "🤮", name: "рвота" }, { char: "🤧", name: "чихает" }, { char: "🥵", name: "жара" },
+          { char: "🥶", name: "холод" }, { char: "🥴", name: "пьяный" }, { char: "😵", name: "шокирован" }, { char: "🤯", name: "взрыв мозга" },
+          { char: "🤠", name: "ковбой" }, { char: "🥳", name: "праздник" }, { char: "😎", name: "крутой" }, { char: "🤓", name: "ботаник" },
+          { char: "🧐", name: "монокль" }, { char: "😕", name: "замешательство" }, { char: "😟", name: "тревога" }, { char: "🙁", name: "грустный" },
+          { char: "😮", name: "удивление" }, { char: "😯", name: "ого" }, { char: "😲", name: "шок" }, { char: "ах", char: "😳" },
+          { char: "🥺", name: "умоляет" }, { char: "😦", name: "испуг" }, { char: "😧", name: "страх" }, { char: "📁", name: "папка" },
+          { char: "😨", name: "испуган" }, { char: "😰", name: "холодный пот" }, { char: "😥", name: "облегчение грусть" }, { char: "😢", name: "слеза" },
+          { char: "😭", name: "плач" }, { char: "😱", name: "крик" }, { char: "😖", name: "боль" }, { char: "😣", name: "упорство" },
+          { char: "😞", name: "разочарование" }, { char: "😓", name: "тяжело" }, { char: "😩", name: "устал" }, { char: "😫", name: "изнеможение" },
+          { char: "🥱", name: "зевота" }, { char: "😤", name: "злость" }, { char: "😡", name: "ярость" }, { char: "😠", name: "сердит" }
+        ]
+      },
+      {
+        id: "people", name: "Жесты и Люди", icon: "👋",
+        emojis: [
+          { char: "👋", name: "машет" }, { char: "🤚", name: "ладонь" }, { char: "🖐️", name: "пальцы" }, { char: "✋", name: "стоп" },
+          { char: "🖖", name: "вулкан" }, { char: "👌", name: "ок" }, { char: "🤏", name: "чуть-чуть" }, { char: "✌️", name: "победа" },
+          { char: "🤞", name: "удача" }, { char: "🤟", name: "любовь" }, { char: "🤘", name: "рок" }, { char: "🤙", name: "звони" },
+          { char: "👈", name: "влево" }, { char: "👉", name: "вправо" }, { char: "👆", name: "вверх" }, { char: "🖕", name: "фак" },
+          { char: "👇", name: "вниз" }, { char: "☝️", name: "указательный" }, { char: "👍", name: "класс" }, { char: "👎", name: "дизлайк" },
+          { char: "✊", name: "кулак" }, { char: "👊", name: "удар" }, { char: "🤛", name: "кулак влево" }, { char: "🤜", name: "кулак вправо" },
+          { char: "👏", name: "аплодисменты" }, { char: "🙌", name: "ура" }, { char: "👐", name: "открыто" }, { char: "🤲", name: "молитва" },
+          { char: "🤝", name: "рукопожатие" }, { char: "🙏", name: "поклонение" }, { char: "✍️", name: "пишет" }, { char: "💅", name: "ногтевой сервис" },
+          { char: "🤳", name: "селфи" }, { char: "💪", name: "бицепс" }, { char: "🧠", name: "мозг" }, { char: "🫀", name: "сердце орган" },
+          { char: "👀", name: "глаза" }, { char: "👅", name: "язык" }, { char: "👄", name: "губы" }, { char: "👶", name: "ребенок" }
         ]
       },
       {
@@ -350,8 +377,13 @@
         emojis: [
           { char: "🐶", name: "собака" }, { char: "🐱", name: "кот" }, { char: "🐭", name: "мышь" }, { char: "🐹", name: "хомяк" },
           { char: "🐰", name: "кролик" }, { char: "🦊", name: "лиса" }, { char: "🐻", name: "медведь" }, { char: "🐼", name: "панда" },
-          { char: "🦁", name: "лев" }, { char: "🐮", name: "корова" }, { char: "🐷", name: "свинья" }, { char: "🐸", name: "жаба" },
-          { char: "🐵", name: "обезьяна" }, { char: "🦄", name: "единорог" }, { char: "🐝", name: "пчела" }, { char: "🌲", name: "дерево" }
+          { char: "🐻‍❄️", name: "белый медведь" }, { char: "🐨", name: "коала" }, { char: "🐯", name: "тигр" }, { char: "🦁", name: "лев" },
+          { char: "🐮", name: "корова" }, { char: "🐷", name: "свинья" }, { char: "🐸", name: "жаба" }, { char: "🐵", name: "обезьяна" },
+          { char: "🐔", name: "курица" }, { char: "🐧", name: "пингвин" }, { char: "🐦", name: "птица" }, { char: "🐤", name: "цыпленок" },
+          { char: "🦄", name: "единорог" }, { char: "🐝", name: "пчела" }, { char: "🐛", name: "гусеница" }, { char: "🦋", name: "бабочка" },
+          { char: "🐌", name: "улитка" }, { char: "🐞", name: "божья коровка" }, { char: "🌾", name: "колос" }, { char: "💐", name: "букет" },
+          { char: "🌸", name: "сакура" }, { char: "🌹", name: "роза" }, { char: "🌺", name: "гибискус" }, { char: "Sunflower", char: "🌻" },
+          { char: "🌲", name: "дерево" }, { char: "🌳", name: "зеленое дерево" }, { char: "🌴", name: "пальма" }, { char: "🌵", name: "кактус" }
         ]
       },
       {
@@ -359,50 +391,82 @@
         emojis: [
           { char: "🍕", name: "пицца" }, { char: "🍔", name: "бургер" }, { char: "🍟", name: "фри" }, { char: "🌭", name: "хотдог" },
           { char: "🍿", name: "попкорн" }, { char: "🥓", name: "бекон" }, { char: "🍳", name: "яичница" }, { char: "🧀", name: "сыр" },
-          { char: "🍣", name: "суши" }, { char: "🍦", name: "мороженое" }, { char: "🍩", name: "пончик" }, { char: "☕", name: "кофе" }, { char: "🍺", name: "пиво" }
+          { char: "🥩", name: "мясо" }, { char: "🍗", name: "курица" }, { char: "🍞", name: "хлеб" }, { char: "🥐", name: "круассан" },
+          { char: "🥖", name: "багет" }, { char: "🥨", name: "крендель" }, { char: "🥞", name: "блины" }, { char: "🧇", name: "вафли" },
+          { char: "🍣", name: "суши" }, { char: "🍦", name: "мороженое" }, { char: "🍩", name: "пончик" }, { char: "🍰", name: "торт" },
+          { char: "🍫", name: "шоколад" }, { char: "🍬", name: "конфета" }, { char: "☕", name: "кофе" }, { char: "🧃", name: "сок" },
+          { char: "🍺", name: "пиво" }, { char: "🍻", name: "кружки" }, { char: "🍷", name: "вино" }, { char: "🧋", name: "бабл ти" }
         ]
       },
       {
-        id: "activity", name: "Спорт", icon: "⚽",
+        id: "activity", name: "Спорт и Развлечения", icon: "⚽",
         emojis: [
-          { char: "⚽", name: "футбол" }, { char: "🏀", name: "баскетбол" }, { char: "🎾", name: "теннис" }, { char: "🥊", name: "бокс" },
-          { char: "🎮", name: "геймпад" }, { char: "🎯", name: "мишень" }, { char: "🏆", name: "кубок" }
+          { char: "⚽", name: "футбол" }, { char: "🏀", name: "баскетбол" }, { char: "🏈", name: "регби" }, { char: "⚾", name: "бейсбол" },
+          { char: "🥎", name: "софтбол" }, { char: "🎾", name: "теннис" }, { char: "🏐", name: "волейбол" }, { char: "🥊", name: "бокс" },
+          { char: "🥋", name: "кимоно" }, { char: "🎯", name: "мишень" }, { char: "🎮", name: "геймпад" }, { char: "🎰", name: "слот" },
+          { char: "🎲", name: "кубики" }, { char: "♟️", name: "шахматы" }, { char: "🎭", name: "маски" }, { char: "🎨", name: "палитра" },
+          { char: "🏆", name: "кубок" }, { char: "🥇", name: "золото" }, { char: "🥈", name: "серебро" }, { char: "🥉", name: "бронза" }
         ]
       },
       {
-        id: "travel", name: "Транспорт", icon: "🚗",
+        id: "travel", name: "Транспорт и Места", icon: "🚗",
         emojis: [
-          { char: "🚗", name: "машина" }, { char: "🚕", name: "такси" }, { char: "🚑", name: "скорая" }, { char: "🚓", name: "полиция" },
-          { char: "🚀", name: "ракета" }, { char: "✈️", name: "самолет" }
+          { char: "🚗", name: "машина" }, { char: "🚕", name: "такси" }, { char: "🚙", name: "внедорожник" }, { char: "🚌", name: "автобус" },
+          { char: "🏣", name: "почта" }, { char: "🚑", name: "скорая" }, { char: "🚒", name: "пожарная" }, { char: "🚓", name: "полиция" },
+          { char: "🏎️", name: "гонка" }, { char: "🏍️", name: "мотоцикл" }, { char: "🛵", name: "скутер" }, { char: "🚲", name: "велики" },
+          { char: "🚀", name: "ракета" }, { char: "🛸", name: "нло" }, { char: "✈️", name: "самолет" }, { char: "🚁", name: "вертолет" },
+          { char: "⛵", name: "парусник" }, { char: "🚤", name: "катер" }, { char: "🛳️", name: "лайнер" }, { char: "⚓", name: "якорь" }
         ]
       },
       {
         id: "objects", name: "Предметы", icon: "💡",
         emojis: [
-          { char: "💡", name: "лампочка" }, { char: "📱", name: "телефон" }, { char: "💻", name: "ноутбук" }, { char: "⌚", name: "часы" },
-          { char: "📸", name: "камера" }, { char: "🔑", name: "ключ" }, { char: "🎁", name: "подарок" }
+          { char: "💡", name: "лампочка" }, { char: "📱", name: "телефон" }, { char: "📲", name: "звонок" }, { char: "💻", name: "ноутбук" },
+          { char: "⌨️", name: "клавиатура" }, { char: "🖥️", name: "монитор" }, { char: "🖨️", name: "принтер" }, { char: "🖱️", name: "мышь" },
+          { char: "⌚", name: "часы" }, { char: "📷", name: "фото" }, { char: "📸", name: "камера" }, { char: "🎥", name: "видео" },
+          { char: "🔋", name: "батарейка" }, { char: "🔌", name: "вилка" }, { char: "🔑", name: "ключ" }, { char: "🗝️", name: "старый ключ" },
+          { char: "🎁", name: "подарок" }, { char: "🎈", name: "шарик" }, { char: "🎉", name: "праздник" }, { char: "🎊", name: "конфетти" }
         ]
       },
       {
-        id: "flags", name: "Символы, Цифры и Флаги", icon: "🚩",
+        id: "symbols", name: "Символы", icon: "🔣",
         emojis: [
-          { char: "🇺🇦", name: "украина" }, { char: "🇵🇱", name: "польша" }, { char: "🇺🇸", name: "сша" }, { char: "🇬🇧", name: "великобритания" },
-          { char: "🇩🇪", name: "германия" }, { char: "🚩", name: "красный флаг" }, { char: "🏁", name: "финиш" },
+          { char: "❤️", name: "сердце" }, { char: "🧡", name: "оранжевое сердце" }, { char: "💛", name: "желтое сердце" }, { char: "💚", name: "зеленое сердце" },
+          { char: "💙", name: "синее сердце" }, { char: "💜", name: "фиолетовое сердце" }, { char: "🖤", name: "черное сердце" }, { char: "🤍", name: "белое сердце" },
+          { char: "🤎", name: "коричневое сердце" }, { char: "💔", name: "разбитое сердце" }, { char: "❣️", name: "восклицательное сердце" }, { char: "💕", name: "два сердца" },
+          { char: "💞", name: "крутящиеся сердца" }, { char: "💓", name: "биение сердца" }, { char: "💗", name: "растущее сердце" }, { char: "💖", name: "блестящее сердце" },
           { char: "0️⃣", name: "0" }, { char: "1️⃣", name: "1" }, { char: "2️⃣", name: "2" }, { char: "3️⃣", name: "3" }, { char: "4️⃣", name: "4" },
           { char: "5️⃣", name: "5" }, { char: "6️⃣", name: "6" }, { char: "7️⃣", name: "7" }, { char: "8️⃣", name: "8" }, { char: "9️⃣", name: "9" },
-          { char: "🔟", name: "10" }, { char: "🔢", name: "цифры" }, { char: "#️⃣", name: "решетка" }, { char: "💯", name: "100" },
-          { char: "✅", name: "галочка" }, { char: "❌", name: "крестик" }, { char: "⚠️", name: "внимание" }
+          { char: "🔟", name: "10" }, { char: "🔢", name: "цифры" }, { char: "#️⃣", name: "решетка" }, { char: "*️⃣", name: "звездочка" }, { char: "💯", name: "100" },
+          { char: "✅", name: "галочка" }, { char: "❌", name: "крестик" }, { char: "⚠️", name: "внимание" }, { char: "⛔", name: "стоп" }, { char: "🚫", name: "запрет" },
+          { char: "♻️", name: "переработка" }, { char: "❇️", name: "зеленая искра" }, { char: "💹", name: "рост" }, { char: "💲", name: "доллар" }
         ]
       },
       {
-        id: "ios_stickers", name: "iOS Stickers", icon: "🍏", isStickerCategory: true,
+        id: "flags", name: "Флаги", icon: "🏁",
+        emojis: [
+          { char: "🇺🇦", name: "украина" }, { char: "🇵🇱", name: "польша" }, { char: "🇺🇸", name: "сша" }, { char: "🇬🇧", name: "великобритания" },
+          { char: "🇩🇪", name: "германия" }, { char: "🇫🇷", name: "франция" }, { char: "🇪🇸", name: "испания" }, { char: "🇮🇹", name: "италия" },
+          { char: "🇨🇦", name: "канада" }, { char: "🇯🇵", name: "япония" }, { char: "🇰🇷", name: "корея" }, { char: "🇨🇳", name: "китай" },
+          { char: "🚩", name: "красный флаг" }, { char: "🏁", name: "финиш" }, { char: "🏳️", name: "белый флаг" }, { char: "🏴", name: "черный флаг" },
+          { char: "🏳️‍🌈", name: "радужный флаг" }, { char: "🏴‍☠️", name: "пиратский флаг" }
+        ]
+      },
+      {
+        id: "stickers", name: "iOS Стикеры", icon: "🦄", isStickerCategory: true,
         stickers: [
           { name: "iOS Doge", url: getAppleEmojiUrl("🐶"), code: "[Sticker: Doge]" },
-          { name: "iOS Heart", url: getAppleEmojiUrl("❤️"), code: "[Sticker: Heart]" },
           { name: "iOS Cool", url: getAppleEmojiUrl("😎"), code: "[Sticker: Cool]" },
+          { name: "iOS Heart", url: getAppleEmojiUrl("❤️"), code: "[Sticker: Heart]" },
           { name: "iOS Party", url: getAppleEmojiUrl("🥳"), code: "[Sticker: Party]" },
           { name: "iOS Fire", url: getAppleEmojiUrl("🔥"), code: "[Sticker: Fire]" },
-          { name: "iOS Rocket", url: getAppleEmojiUrl("🚀"), code: "[Sticker: Rocket]" }
+          { name: "iOS Rocket", url: getAppleEmojiUrl("🚀"), code: "[Sticker: Rocket]" },
+          { name: "iOS Laugh", url: getAppleEmojiUrl("😂"), code: "[Sticker: Laugh]" },
+          { name: "iOS Ghost", url: getAppleEmojiUrl("👻"), code: "[Sticker: Ghost]" },
+          { name: "iOS Alien", url: getAppleEmojiUrl("👽"), code: "[Sticker: Alien]" },
+          { name: "iOS Robot", url: getAppleEmojiUrl("🤖"), code: "[Sticker: Robot]" },
+          { name: "iOS Crown", url: getAppleEmojiUrl("👑"), code: "[Sticker: Crown]" },
+          { name: "iOS Unicorn", url: getAppleEmojiUrl("🦄"), code: "[Sticker: Unicorn]" }
         ]
       }
     ];
