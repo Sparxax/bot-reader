@@ -80,7 +80,7 @@
     .input-bar { padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
     .input-bar input { flex: 1; margin: 0; background: transparent; border: none; color: #fff; font-size: 15px; padding: 6px 0; outline: none; user-select: text; }
 
-    /* APPLE EMOJI PICKER (TELEGRAM STYLE) */
+    /* APPLE EMOJI PICKER */
     .apple-emoji-img { width: 30px; height: 30px; object-fit: contain; pointer-events: none; }
     .apple-tab-img { width: 22px; height: 22px; object-fit: contain; pointer-events: none; }
 
@@ -215,10 +215,10 @@
         <button class="icon-btn" id="media-record-btn" onclick="handleRecordClick()" style="color:#7F91A4;" title="Запись">🎙️</button>
       </div>
 
-      <!-- EMOJI PICKER (100% APPLE EMOJIPEDIA COMPLETE ENGINE) -->
+      <!-- EMOJI PICKER -->
       <div class="emoji-picker-container" id="emoji-picker">
         <div class="emoji-search-box">
-          <input type="text" id="emoji-search-input" placeholder="Поиск всех эмодзи..." oninput="filterEmojiBySearch()">
+          <input type="text" id="emoji-search-input" placeholder="Поиск эмодзи..." oninput="filterEmojiBySearch()">
         </div>
         
         <div class="emoji-categories-tabs" id="emoji-tabs"></div>
@@ -317,74 +317,42 @@
     let isHistoryPushed = false;
     let isEmojiPickerPushed = false;
 
-    // Ссылка на высококачественный Apple Emoji CDN
+    // Ссылка на Apple Emoji CDN (для рендеринга иконок)
     function getAppleEmojiUrl(char) {
       return `https://emojicdn.elk.sh/${encodeURIComponent(char)}?style=apple`;
     }
 
-    /* СТРУКТУРА И ИКОНКИ КАТЕГОРИЙ В ТОЧНОСТИ КАК В TELEGRAM */
+    /* TELEGRAM EMOJI CATEGORIES & LOCAL DATA (Встроено без CORS задержек) */
     const TELEGRAM_EMOJI_CATEGORIES = [
       { id: "recent", name: "Недавние", icon: "💡" },
-      { id: "smileys", name: "Смайлы и эмоции", icon: "😀" },
-      { id: "animals", name: "Природа и животные", icon: "🐻" },
-      { id: "food", name: "Еда и напитки", icon: "🍔" },
-      { id: "activity", name: "Спорт и активность", icon: "⚽" },
-      { id: "travel", name: "Путешествия и транспорт", icon: "🚗" },
+      { id: "smileys", name: "Смайлы", icon: "😀" },
+      { id: "animals", name: "Природа", icon: "🐻" },
+      { id: "food", name: "Еда", icon: "🍔" },
+      { id: "activity", name: "Спорт", icon: "⚽" },
+      { id: "travel", name: "Транспорт", icon: "🚗" },
       { id: "objects", name: "Предметы", icon: "💡" },
       { id: "symbols", name: "Символы", icon: "🔣" },
       { id: "flags", name: "Флаги", icon: "🏁" }
     ];
 
-    let fullAppleEmojiStore = {};
+    let recentEmojisList = JSON.parse(localStorage.getItem('recent_apple_emojis') || '["👍", "❤️", "🔥", "😂", "😊", "🎉", "✨", "🙌"]');
+
+    const LOCAL_EMOJI_DATABASE = {
+      smileys: ["😀","😃","😄","😁","😆","😅","😂","🤣","🥲","🥹","☺️","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😮‍💨","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","📁","😳","🫣","😱","🥱","😴","😮","😯","😲","🥱","😴","😷","🤒","🤕","🤢","🤮","🤧","🫠","🤔","🫡","🤫","🫠","🤥","😶","😶‍🌫️","😬","🙄","😯","🥱","😴","😴","😈","👿","👹","👺","💀","☠️","👻","👽","🤖","💩","😺","😸","😹","😻","😼","😽","🙀","😿","😾","🙈","🙉","🙊","👋","🤚","🖐️","✋","🖖","🫱","🫲","🫴","🫳","👌","🤌","🤌","🤏","✌️","🤞","🫰","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","🫵","👍","👎","✊","👊","🤛","🤜","👏","🙌","🫶","👐","🤲","🤝","🙏","✍️","💅","🤳","💪"],
+      animals: ["🐻","🐶","🐱","🐭","🐹","🐰","🦊","🐻‍❄️","🐼","🐨","🐯","🦁","🐮","🐷","🐽","🐸","🐵","🙈","🙉","🙊","🐒","🐔","🐧","🐦","🐤","🐣","🐥","🦆","🦅","🦉","🦇","🐺","🐗","🐴","🦄","🐝","🪱","🐛","🦋","🐌","🐞","🐜","🪰","🪲","🪳","🦟","🦗","🕷️","🕸️","🦂","🐢","🐍","🦎","🦖","🦕","🐙","🦑","🦐","🦞","🦀","🐡","🐠","🐟","🐬","🐳","🐋","🦈","🦭","🐊","🐅","🐆","🦓","🫏","🦍","🦧","🦣","🐘","🦛","🦏","🐪","🐫","🦒","🦘","🦬","🐃","🐂","🐄","🐎","🐖","🦙","🐐","🐑","🦌","🐕","🐩","🦮","🐕‍🦺","🐈","🐈‍⬛","🐓","🦃","🦤","🦚","🦜","🪽","🦩","🕊️","🐇","🦝","🦨","🦡","🦫","🦦","🦥","🦔","🐿️","🦘","🦡","🐾","🐉","🐲","🌵","🎄","🌲","🌳","🌴","🪵","🌱","🌿","☘️","🍀","🎍","🪴","🎋","🍃","🍂","🍁","🪺","🪹","🍄","🐚","🪨","🌾","💐","🌷","🌹","🥀","🪻","🌺","🌸","🌼","🌻"],
+      food: ["🍏","🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🫐","🍈","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🍆","🥑","🥦","🥬","🥒","🌶️","🫑","🌽","🥕","🫒","🧄","🧅","🥔","🍠","🫛","🥐","🥯","🍞","🥖","🥨","🧀","🥚","🍳","🧈","🥞","🧇","🥓","🥩","🍗","🍖","🦴","🌭","🍔","🍟","🍕","🫓","🥪","🥙","🧆","🌮","🌯","🫔","🥗","🥘","🫕","🥫","🍝","🍜","🍲","🍛","🍣","🍱","🥟","🦪","🍤","🍙","🍚","🍘","🍥","🥠","🥮","🍢","🍡","🍧","🍨","🍦","🥧","🧁","🍰","🎂","🍮","🍭","🍬","🍫","🍿","🍩","🍪","🌰","🥜","🍯","🥛","🍼","☕️","🍵","🧃","🥤","🧋","🍶","🍺","🍻","🥂","🍷","🥃","🍸","🍹","🧉","🍾","🧊","🥄","🍴","🍽️","🥣","🥡","🥢"],
+      activity: ["⚽","🏀","🏈","⚾️","🥎","🎾","🏐","🏉","🥏","🎱","🪀","🏓","🏸","🏒","🏑","🥍","🏏","🪃","🥅","⛳️","🪁","🏹","🎣","🏁","🥊","🥋","🎽","🛹","🛼","🛷","⛸️","🥌","🎿","⛷️","🏂","🪂","🏋️‍♂️","🏋️‍♀️","🤼‍♂️","🤼‍♀️","🤸‍♂️","🤸‍♀️","⛹️‍♂️","⛹️‍♀️","🤺","🤾‍♂️","🤾‍♀️","🏌️‍♂️","🏌️‍♀️","🏇","🧘‍♂️","🧘‍♀️","🏄‍♂️","🏄‍♀️","🏊‍♂️","🏊‍♀️","🤽‍♂️","🤽‍♀️","🚣‍♂️","🚣‍♀️","🧗‍♂️","🧗‍♀️","🚵‍♂️","🚵‍♀️","🚴‍♂️","🚴‍♀️","🏆","🥇","🥈","🥉","🏅","🎖️","🏵️","🎗️","🎫","🎟️","🎪","🤹‍♂️","🤹‍♀️","🎭","🩰","🎨","🎬","🎤","🎧","🎼","🎹","🥁","🪘","🎷","🎺","🪗","🎸","🪕","🎻","🎲","♟️","🎯","🎳","🎮","🎰","🧩"],
+      travel: ["🚗","🚕","🚙","🚌","🦺","🏎️","🚓","🚑","🚒","🚐","🛻","🚚","🚛","🚜","🦯","👩‍🦽","👨‍🦽","🛵","🏍️","🛺","🚨","🚔","🚍","🚘","🚖","🛞","🚲","🛴","🚏","🛣️","🛤️","🛢️","⛽️","🛞","🚨","🚥","🚦","🛑","🚧","⚓️","⛵️","🛟","🚤","🛥️","🛳️","⚙️","⛴️","🛥️","🛳️","✈️","🛫","🛬","🪂","💺","🚁","🦟","🚟","🚠","🚡","🛰️","🚀","🛸","🛎️","🧳","⌛️","⏳","⌚️","⏰","⏱️","⏲️","🕰️","🕛","🕧","🕐","🕜","🕑","🕝","🕒","🛕","🕌","🕍","⛩️","🕋","⛲️","⛺️","🌁","🌃","🏙️","🌄","🌅","🌆","🌇","🌉","♨️","🎠","🎡","🎢","💈","🎪"],
+      objects: ["👓","🕶️","🥽","🥼","🦺","👔","👕","👖","🥢","👗","👘","🥻","🩱","🩲","🩳","👙","👚","👛","👜","👝","🛍️","🎒","🩴","👞","👟","🥾","🥿","👠","👡","🪵","🩰","boot","👑","👒","🎩","🎓","🧢","🪖","💄","💍","💼","📁","📂","📄","📜","📄","📰","🗞️","📑","🔖","🏷️","💰","🪙","💴","💵","💶","💷","💸","💳","🧾","✉️","📧","📨","📩","📤","📥","📦","📫","📪","📬","📭","📮","📯","📜","📜","📈","📉","📊","📋","📌","📍","📎","🖇️","📏","📐","✂️","🗃️","🗄️","🗑️","🔒","🔓","🔏","🔐","🔑","🗝️","🔨","🪓","⛏️","⚒️","🛠️","🗡️","⚔️","💣","🪃","🏹","🛡️","🪚","🔧","🪛","🔩","👩‍🔧","🦯"],
+      symbols: ["❤️","🩷","🧡","💛","💚","💙","🩵","💜","🖤","🩶","🤍","🤎","💔","❤️‍🔥","❤️‍🩹","❣️","💕","💞","💓","💗","💖","💘","💝","💟","☮️","✝️","☪️","🪯","🕉️","☸️","✡️","🔯","🕎","☯️","☦️","🛐","⛎","♈️","♉️","♊️","♋️","♌️","♍️","♎️","♏️","♐️","♑️","♒️","♓️","🆔","⚛️","🈳","🈹","☣️","☢️","📴","📳","🈶","🈚️","🈸","🈺","🈷️","✴️","🆚","💮","🉐","㊙️","㊗️","🈴","🈵","🈲","🅰️","🅱️","🆎","🆏","🅾️","💦","💨","💫","💬","👁️‍🗨️","🗨️","🗯️","💭","💤","♨️","🛑","🕛","🕧","🕐","🕜","‼️","⁉️","❓","❔","❕","❗️","〰️","⚠️","🚸","🔱","⚜️","🔰","♻️","✅","🈯️","💹","❇️","✳️","❎","🌐","💠","Ⓜ️","🌀","💤","🏧","🚾","♿️","🅿️","🛗","🈁","🈂️","🛂","🛃","🛄","🛅","🚹","🚺","🚼","⚧️","🚻","🗑️","🎦","📶","🈁","🔣","ℹ️","🔤","🔡","🔠","🆖","🆗","🆙","🆒","🆕","🆓","0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"],
+      flags: ["🏁","🚩","🎌","🏴","🏳️","🏳️‍🌈","🏳️‍⚧️","🏴‍☠️","🇦🇨","🇦🇩","🇦🇪","🇦🇫","🇦🇬","🇦🇮","🇦🇱","🇦🇲","🇦🇴","🇦🇶","🇦🇷","🇦🇸","🇦🇹","🇦🇺","🇦🇼","🇦🇽","🇦🇿","🇧🇦","🇧🇧","🇧🇩","🇧🇪","🇧🇫","🇧🇬","🇧🇭","🇧🇮","🇧🇯","🇧🇱","🇧🇲","🇧🇳","🇧🇴","🇧🇶","🇧🇷","🇧🇸","🇧🇹","🇧🇻","🇧🇼","🇧🇾","🇧🇿","🇨🇦","🇨🇨","🇨🇩","🇨🇫","🇨🇬","🇨🇭","🇨🇮","🇨🇰","🇨🇱","🇨🇲","🇨🇳","🇨🇴","🇨🇵","🇨🇷","🇨🇺","🇨🇻","🇨🇼","🇨🇽","🇨🇾","🇨🇿","🇩🇪","🇩🇬","🇩🇯","🇩🇰","🇩🇲","🇩🇴","🇩🇿","🇪🇦","🇪🇨","🇪🇪","🇪🇬","🇪🇭","🇪🇷","🇪🇸","🇪🇹","🇪🇺","🇫🇮","🇫🇯","🇫🇰","🇫🇲","🇫🇴","🇫🇷","🇬🇦","🇬🇧","🇬🇩","🇬🇪","🇬🇫","🇬🇬","🇬🇭","🇬🇮","🇬🇱","🇬🇲","🇬🇳","🇬🇵","🇬🇶","🇬🇷","🇬🇸","🇬🇹","🇬🇺","🇬🇼","🇬🇾","🇭🇰","🇭🇲","🇭🇳","🇭🇷","🇭🇹","🇭🇺","🇮🇨","🇮🇩","🇮🇪","🇮🇱","🇮🇲","🇮🇳","🇮🇴","🇮🇶","🇮🇷","🇮🇸","🇮🇹","🇯🇪","🇯🇲","🇯🇴","🇯🇵","🇰🇪","🇰🇬","🇰🇭","🇰🇮","🇰🇲","🇰🇳","🇰🇵","🇰🇷","🇰🇼","🇰🇾","🇰🇿","🇱🇦","🇱🇧","🇱🇨","🇱🇮","🇱🇰","🇱🇷","🇱🇸","🇱🇹","🇱🇺","🇱🇻","🇱🇾","🇲🇦","🇲🇨","🇲🇩","🇲🇪","🇲🇫","🇲🇬","🇲🇭","🇲🇰","🇲🇱","🇲🇲","🇲🇳","🇲🇴","🇲🇵","🇲🇶","🇲🇷","🇲🇸","🇲🇹","🇲🇺","🇲🇻","🇲🇼","🇲🇽","🇲🇾","🇲🇿","🇳🇦","🇳🇨","🇳🇪","🇳🇫","🇳🇬","🇳🇮","🇳🇱","🇳🇴","🇳🇵","🇳🇷","🇳🇺","🇳🇿","🇴🇲","🇵🇦","🇵🇪","🇵🇫","🇵🇬","🇵🇭","🇵🇰","🇵🇱","🇵🇲","🇵🇳","🇵🇷","🇵🇸","🇵🇹","🇵🇼","🇵🇾","🇶🇦","🇷🇪","🇷🇴","🇷🇸","🇷🇺","🇷🇼","🇸🇦","🇸🇧","🇸🇨","🇸🇩","🇸🇪","🇸🇬","🇸🇭","🇸🇮","🇸🇯","🇸🇰","🇸🇱","🇸🇲","🇸🇳","🇸🇴","🇸🇷","🇸🇸","🇸🇹","🇸🇻","🇸🇽","🇸🇾","🇸🇿","🇹🇦","🇹🇨","🇹🇩","🇹🇫","🇹🇬","🇹🇭","🇹🇯","🇹🇰","🇹🇱","🇹🇲","🇹🇳","🇹🇴","🇹🇷","🇹🇹","🇹🇻","🇹🇼","🇹🇿","🇺🇦","🇺🇬","🇺🇲","🇺🇳","🇺🇸","🇺🇾","🇺🇿","🇻🇦","🇻🇨","🇻🇪","🇻🇬","🇻🇮","🇻🇳","🇻🇺","🇼🇫","🇼🇸","🇽🇰","🇾🇪","🇾🇹","🇿🇦","🇿🇲","🇿🇼"]
+    };
+
     let activeCategory = 'smileys';
-    let recentEmojisList = JSON.parse(localStorage.getItem('recent_apple_emojis') || '["👍", "❤️", "🔥", "😂", "😊"]');
-
-    // Загрузка ПОЛНОЙ базы Unicode Emoji Data (100% эмодзи по стандартам Telegram)
-    async function fetchFullAppleEmojiData() {
-      try {
-        const res = await fetch('https://cdn.jsdelivr.net/npm/unicode-emoji-json@0.6.0/data-by-group.json');
-        const rawGroups = await res.json();
-
-        fullAppleEmojiStore = {
-          recent: recentEmojisList.map(char => ({ char, name: 'недавний' })),
-          smileys: [], animals: [], food: [], activity: [], travel: [], objects: [], symbols: [], flags: []
-        };
-
-        const groupMapping = {
-          'Smileys & Emotion': 'smileys',
-          'People & Body': 'smileys',
-          'Animals & Nature': 'animals',
-          'Food & Drink': 'food',
-          'Activities': 'activity',
-          'Travel & Places': 'travel',
-          'Objects': 'objects',
-          'Symbols': 'symbols',
-          'Flags': 'flags'
-        };
-
-        Object.keys(rawGroups).forEach(groupName => {
-          const targetCategory = groupMapping[groupName] || 'symbols';
-          rawGroups[groupName].forEach(item => {
-            fullAppleEmojiStore[targetCategory].push({
-              char: item.emoji,
-              name: (item.name || '').toLowerCase()
-            });
-          });
-        });
-
-      } catch (e) {
-        console.error("Ошибка при загрузке полных данных эмодзи", e);
-      }
-      renderEmojiGrid();
-    }
 
     function initEmojiPickerUI() {
       renderEmojiTabs();
-      if (!fullAppleEmojiStore.smileys || fullAppleEmojiStore.smileys.length === 0) {
-        fetchFullAppleEmojiData();
-      } else {
-        renderEmojiGrid();
-      }
+      renderEmojiGrid();
     }
 
     function renderEmojiTabs() {
@@ -405,14 +373,13 @@
     }
 
     function filterEmojiBySearch() {
-      const query = document.getElementById('emoji-search-input').value.trim().toLowerCase();
+      const query = document.getElementById('emoji-search-input').value.trim();
       if (!query) return renderEmojiGrid();
 
       let matchedEmojis = [];
-      Object.keys(fullAppleEmojiStore).forEach(catKey => {
-        if (catKey === 'recent') return;
-        fullAppleEmojiStore[catKey].forEach(item => {
-          if (item.name && item.name.includes(query)) matchedEmojis.push(item);
+      Object.keys(LOCAL_EMOJI_DATABASE).forEach(catKey => {
+        LOCAL_EMOJI_DATABASE[catKey].forEach(char => {
+          if (char.includes(query)) matchedEmojis.push(char);
         });
       });
 
@@ -421,16 +388,24 @@
 
     function renderEmojiGrid(customList = null) {
       const grid = document.getElementById('emoji-grid');
-      let listToRender = customList || (fullAppleEmojiStore[activeCategory] || []);
+      let listToRender = customList;
+
+      if (!listToRender) {
+        if (activeCategory === 'recent') {
+          listToRender = recentEmojisList;
+        } else {
+          listToRender = LOCAL_EMOJI_DATABASE[activeCategory] || [];
+        }
+      }
 
       if (listToRender.length === 0) {
-        grid.innerHTML = `<div style="grid-column: span 8; color:#7F91A4; font-size:12px; margin-top:20px; text-align:center;">Загрузка полного списка эмодзи...</div>`;
+        grid.innerHTML = `<div style="grid-column: span 8; color:#7F91A4; font-size:12px; margin-top:20px; text-align:center;">Пусто</div>`;
         return;
       }
 
-      grid.innerHTML = listToRender.map(item => `
-        <div class="emoji-item" onclick="insertEmoji('${item.char}')" title="${item.name || ''}">
-          <img class="apple-emoji-img" src="${getAppleEmojiUrl(item.char)}" alt="${item.char}" loading="lazy">
+      grid.innerHTML = listToRender.map(char => `
+        <div class="emoji-item" onclick="insertEmoji('${char}')">
+          <img class="apple-emoji-img" src="${getAppleEmojiUrl(char)}" alt="${char}" loading="lazy">
         </div>
       `).join('');
     }
@@ -463,9 +438,6 @@
       // Сохранение в недавние
       recentEmojisList = [emojiChar, ...recentEmojisList.filter(c => c !== emojiChar)].slice(0, 32);
       localStorage.setItem('recent_apple_emojis', JSON.stringify(recentEmojisList));
-      if (fullAppleEmojiStore.recent) {
-        fullAppleEmojiStore.recent = recentEmojisList.map(char => ({ char, name: 'недавний' }));
-      }
     }
 
     /* МЕДИА И ФАЙЛЫ */
