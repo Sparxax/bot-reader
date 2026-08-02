@@ -135,6 +135,7 @@
       background: #17212B;
       border-bottom: 1px solid #0B1118;
       padding: 4px 0;
+      overflow-x: auto;
     }
 
     .emoji-tab-btn {
@@ -145,6 +146,7 @@
       padding: 4px 8px;
       border-radius: 6px;
       transition: opacity 0.2s, background 0.2s;
+      flex-shrink: 0;
     }
 
     .emoji-tab-btn.active {
@@ -182,6 +184,22 @@
     .emoji-item:hover { background: #242F3D; }
     .emoji-item:active { transform: scale(1.2); }
     .emoji-item img { width: 26px; height: 26px; object-fit: contain; pointer-events: none; }
+
+    /* iOS СТИКЕРЫ */
+    .sticker-item {
+      cursor: pointer;
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      transition: transform 0.15s, background 0.15s;
+    }
+    .sticker-item:hover { background: #242F3D; }
+    .sticker-item:active { transform: scale(1.1); }
+    .sticker-item img { width: 52px; height: 52px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
 
     /* Оверлей записи */
     .recording-overlay { display: none; flex: 1; align-items: center; color: #e53935; font-size: 14px; font-weight: bold; animation: pulse 1s infinite; }
@@ -332,10 +350,10 @@
                 style="color:#7F91A4;" title="Запись">🎙️</button>
       </div>
 
-      <!-- УМНАЯ TELEGRAM ПАНЕЛЬ EMOJI С ПОДДЕРЖКОЙ ФЛАГОВ И УМНЫМ ПОИСКОМ -->
+      <!-- УМНАЯ TELEGRAM ПАНЕЛЬ EMOJI С ПОДДЕРЖКОЙ ФЛАГОВ, ЦИФР, ЭМОДЗИ И IOS СТИКЕРОВ -->
       <div class="emoji-picker-container" id="emoji-picker">
         <div class="emoji-search-box">
-          <input type="text" id="emoji-search-input" placeholder="Поиск (радость, огонь, собака, флаг, украина)..." oninput="filterEmojiBySearch()">
+          <input type="text" id="emoji-search-input" placeholder="Поиск (радость, стикеры, флаги, цифры, кот)..." oninput="filterEmojiBySearch()">
         </div>
         
         <div class="emoji-categories-tabs" id="emoji-tabs">
@@ -346,6 +364,7 @@
           <button class="emoji-tab-btn" onclick="switchEmojiCategory('travel', this)"></button>
           <button class="emoji-tab-btn" onclick="switchEmojiCategory('objects', this)"></button>
           <button class="emoji-tab-btn" onclick="switchEmojiCategory('flags', this)"></button>
+          <button class="emoji-tab-btn" onclick="switchEmojiCategory('ios_stickers', this)"></button>
         </div>
 
         <div class="emoji-grid-scroll" id="emoji-grid"></div>
@@ -425,7 +444,7 @@
 
   <script>
     const MASTER_STORAGE_KEY = 'bot_reader_chats_master';
-    if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+    if (navigator.storage && navigator.storage氛围) navigator.storage.persist();
 
     function loadMasterDB() {
       try {
@@ -458,7 +477,7 @@
     let recSecs = 0;
     let recInterval = null;
 
-    /* --- БАЗА EMOJI TELEGRAM С ПОДДЕРЖКОЙ УМНОГО ПОИСКА И ФЛАГОВ --- */
+    /* --- ПОЛНАЯ БАЗА EMOJI И СТИКЕРОВ С ПОДДЕРЖКОЙ ФЛАГОВ, ЦИФР И IOS СТИКЕРОВ --- */
     const TELEGRAM_EMOJI_DATA = [
       {
         id: "smileys",
@@ -468,12 +487,38 @@
           { char: "😀", name: "улыбка", tags: ["смех", "радость", "веселье", "happy"] },
           { char: "😃", name: "счастье", tags: ["улыбка", "радость"] },
           { char: "😄", name: "смех", tags: ["смешно", "радость"] },
+          { char: "😁", name: "сияющий смех", tags: ["зубы", "радость"] },
+          { char: "😆", name: "зажмуренный смех", tags: ["хаха", "лол"] },
+          { char: "😅", name: "пот от смеха", tags: ["фух", "смешно"] },
           { char: "😂", name: "слезы радости", tags: ["смех", "ржу", "лол", "lol", "хаха"] },
           { char: "🤣", name: "катаюсь от смеха", tags: ["смех", "рофл", "rofl"] },
           { char: "😊", name: "довольный", tags: ["мило", "улыбка"] },
+          { char: "😇", name: "ангел", tags: ["святой", "милый"] },
+          { char: "🙂", name: "легкая улыбка", tags: ["ок", "нормально"] },
+          { char: "🙃", name: "перевернутое лицо", tags: ["ирония", "шутка"] },
+          { char: "😉", name: "мигание", tags: ["подмигивание", "секрет"] },
+          { char: "😌", name: "облегчение", tags: ["спокойствие"] },
           { char: "😍", name: "влюбленный", tags: ["любовь", "сердца", "глаза", "love"] },
           { char: "🥰", name: "влюблен с сердечками", tags: ["любовь", "нежность"] },
           { char: "😘", name: "поцелуй", tags: ["любовь", "чмок"] },
+          { char: "😗", name: "целует", tags: ["чмок"] },
+          { char: "😙", name: "целует с улыбкой", tags: ["нежность"] },
+          { char: "😚", name: "целует со смущением", tags: ["мило"] },
+          { char: "😋", name: "вкусно", tags: ["ням", "язык"] },
+          { char: "😛", name: "показывает язык", tags: ["дурачество"] },
+          { char: "😜", name: "подмигивает с языком", tags: ["прикол"] },
+          { char: "🤪", name: "сумасшедший", tags: ["дичь", "прикол"] },
+          { char: "😝", name: "зажмурился с языком", tags: ["смешно"] },
+          { char: "🤑", name: "деньги в глазах", tags: ["бабки", "богач"] },
+          { char: "🤗", name: "обнимашки", tags: ["обнять", "дружба"] },
+          { char: "🤭", name: "хихикает", tags: ["оой", "секрет"] },
+          { char: "🤫", name: "тихо", tags: ["шсс", "секрет"] },
+          { char: "Thinking", name: "задумался", char: "🤔", tags: ["хмм", "думает"] },
+          { char: "🤐", name: "рот на замок", tags: ["Молчу"] },
+          { char: "🤨", name: "поднятая бровь", tags: ["сомнение", "хмм"] },
+          { char: "😐", name: "нейтральный", tags: ["покерфейс"] },
+          { char: "😑", name: "без эмоций", tags: ["мда"] },
+          { char: "в шоке", char: "😱", tags: ["крик", "испуг", "страх"] },
           { char: "😎", name: "крутой", tags: ["очки", "стиль", "cool"] },
           { char: "🥳", name: "праздник", tags: ["день рождения", "вечеринка", "салют"] },
           { char: "😭", name: "плач", tags: ["слезы", "грусть", "боль", "sad"] },
@@ -493,10 +538,26 @@
         emojis: [
           { char: "🐶", name: "собака", tags: ["пёс", "щенок", "дог", "dog"] },
           { char: "🐱", name: "кошка", tags: ["кот", "котенок", "cat"] },
+          { char: "🐭", name: "мышь", tags: ["мышка"] },
+          { char: "🐹", name: "хомяк", tags: ["хомячок"] },
+          { char: "🐰", name: "кролик", tags: ["заяц"] },
           { char: "🦊", name: "лиса", tags: ["лисица", "fox"] },
           { char: "🐻", name: "медведь", tags: ["мишка", "bear"] },
           { char: "🐼", name: "панда", tags: ["бамбук", "panda"] },
+          { char: "🐨", name: "коала", tags: ["эвкалипт"] },
+          { char: "🐯", name: "тигр", tags: ["хищник"] },
           { char: "🦁", name: "лев", tags: ["царь", "lion"] },
+          { char: "🐮", name: "корова", tags: ["бык"] },
+          { char: "🐷", name: "свинья", tags: ["хрюша"] },
+          { char: "🐸", name: "лягушка", tags: ["жаба"] },
+          { char: "🐵", name: "обезьяна", tags: ["макака"] },
+          { char: "🐔", name: "курица", tags: ["петух"] },
+          { char: "🐧", name: "пингвин", tags: ["лёд"] },
+          { char: "🐦", name: "птица", tags: ["птенчик"] },
+          { char: "🦄", name: "единорог", tags: ["магия"] },
+          { char: "🐝", name: "пчела", tags: ["мёд"] },
+          { char: "🐛", name: "гусеница", tags: ["жук"] },
+          { char: "🦋", name: "бабочка", tags: ["красота"] },
           { char: "🌲", name: "дерево", tags: ["лес", "сосна", "елка", "tree"] }
         ]
       },
@@ -508,6 +569,21 @@
           { char: "🍕", name: "пицца", tags: ["сыр", "еда", "pizza"] },
           { char: "🍔", name: "бургер", tags: ["гамбургер", "фастфуд", "burger"] },
           { char: "🍟", name: "картофель фри", tags: ["фри", "фастфуд"] },
+          { char: "🌭", name: "хот-дог", tags: ["сосиска"] },
+          { char: "🍿", name: "попкорн", tags: ["кино"] },
+          { char: "🥓", name: "бекон", tags: ["мясо"] },
+          { char: "🍳", name: "яичница", tags: ["завтрак"] },
+          { char: "🧇", name: "вафли", tags: ["десерт"] },
+          { char: "🥞", name: "блины", tags: ["оладьи"] },
+          { char: "🍞", name: "хлеб", tags: ["батон"] },
+          { char: "🥖", name: "багет", tags: ["выпечка"] },
+          { char: "🧀", name: "сыр", tags: ["сырок"] },
+          { char: "🥗", name: "салат", tags: ["зелень"] },
+          { char: "🌮", name: "тако", tags: ["мексика"] },
+          { char: "🍣", name: "суши", tags: ["роллы", "рыба"] },
+          { char: "🍦", name: "мороженое", tags: ["сладкое"] },
+          { char: "🍩", name: "пончик", tags: ["донат"] },
+          { char: "🍩", name: "торт", tags: ["праздник"] },
           { char: "☕", name: "кофе", tags: ["чай", "напиток", "горячий", "coffee"] },
           { char: "🍺", name: "пиво", tags: ["алкоголь", "кружка", "beer"] }
         ]
@@ -519,7 +595,15 @@
         emojis: [
           { char: "⚽", name: "футбол", tags: ["мяч", "спорт", "soccer"] },
           { char: "🏀", name: "баскетбол", tags: ["мяч", "спорт"] },
+          { char: "🏈", name: "американский футбол", tags: ["спорт"] },
+          { char: "⚾", name: "бейсбол", tags: ["спорт"] },
+          { char: "🎾", name: "теннис", tags: ["корт"] },
+          { char: "🏐", name: "волейбол", tags: ["спорт"] },
+          { char: "🏉", name: "регби", tags: ["мяч"] },
+          { char: "🏓", name: "пинг-понг", tags: ["теннис"] },
+          { char: "🥊", name: "бокс", tags: ["перчатка", "бой"] },
           { char: "🎮", name: "геймпад", tags: ["игры", "игра", "джойстик", "game"] },
+          { char: "🎯", name: "мишень", tags: ["дарц", "точно"] },
           { char: "🏆", name: "кубок", tags: ["победа", "награда", "первое место"] }
         ]
       },
@@ -529,6 +613,12 @@
         icon: "🚗",
         emojis: [
           { char: "🚗", name: "машина", tags: ["авто", "автомобиль", "car"] },
+          { char: "🚕", name: "такси", tags: ["тачка"] },
+          { char: "🏎️", name: "гонка", tags: ["болид"] },
+          { char: "🚑", name: "скорая", tags: ["врач", "больница"] },
+          { char: "🚒", name: "пожарка", tags: ["огонь"] },
+          { char: "🚓", name: "полиция", tags: ["копы"] },
+          { char: "🚲", name: "велосипед", tags: ["велик"] },
           { char: "🚀", name: "ракета", tags: ["космос", "старт", "rocket"] },
           { char: "✈️", name: "самолет", tags: ["полет", "аэропорт", "plane"] }
         ]
@@ -540,20 +630,63 @@
         emojis: [
           { char: "💡", name: "лампочка", tags: ["идея", "свет", "light"] },
           { char: "📱", name: "телефон", tags: ["смартфон", "айфон", "phone"] },
-          { char: "💻", name: "ноутбук", tags: ["компьютер", "работа", "laptop"] }
+          { char: "💻", name: "ноутбук", tags: ["компьютер", "работа", "laptop"] },
+          { char: "⌚", name: "часы", tags: ["время"] },
+          { char: "📸", name: "камера", tags: ["фото"] },
+          { char: "🔑", name: "ключ", tags: ["замок"] },
+          { char: "🎁", name: "подарок", tags: ["сюрприз"] }
         ]
       },
       {
         id: "flags",
-        name: "Флаги",
+        name: "Символы, Цифры и Флаги",
         icon: "🚩",
         emojis: [
+          /* Флаги */
           { char: "🇺🇦", name: "флаг украины", tags: ["украина", "ukraine", "ua", "україна"] },
           { char: "🇵🇱", name: "флаг польши", tags: ["польша", "poland", "pl", "polska"] },
           { char: "🇺🇸", name: "флаг сша", tags: ["америка", "usa", "us"] },
           { char: "🇬🇧", name: "флаг великобритании", tags: ["англия", "uk", "gb"] },
           { char: "🇩🇪", name: "флаг германии", tags: ["германия", "germany", "de"] },
-          { char: "🇫🇷", name: "флаг франции", tags: ["франция", "france", "fr"] }
+          { char: "🇫🇷", name: "флаг франции", tags: ["франция", "france", "fr"] },
+          { char: "🚩", name: "красный флаг", tags: ["флаг", "сигнал"] },
+          { char: "🏁", name: "финишный флаг", tags: ["гонка", "финиш"] },
+          /* Цифры и Символы */
+          { char: "0️⃣", name: "цифра 0", tags: ["0", "ноль", "цифры", "число"] },
+          { char: "1️⃣", name: "цифра 1", tags: ["1", "один", "цифры", "число"] },
+          { char: "2️⃣", name: "цифра 2", tags: ["2", "два", "цифры", "число"] },
+          { char: "3️⃣", name: "цифра 3", tags: ["3", "три", "цифры", "число"] },
+          { char: "4️⃣", name: "цифра 4", tags: ["4", "четыре", "цифры", "число"] },
+          { char: "5️⃣", name: "цифра 5", tags: ["5", "пять", "цифры", "число"] },
+          { char: "6️⃣", name: "цифра 6", tags: ["6", "шесть", "цифры", "число"] },
+          { char: "7️⃣", name: "цифра 7", tags: ["7", "семь", "цифры", "число"] },
+          { char: "8️⃣", name: "цифра 8", tags: ["8", "восемь", "цифры", "число"] },
+          { char: "9️⃣", name: "цифра 9", tags: ["9", "девять", "цифры", "число"] },
+          { char: "🔟", name: "число 10", tags: ["10", "десять", "цифры"] },
+          { char: "🔢", name: "набор цифр", tags: ["1234", "цифры", "знак"] },
+          { char: "#️⃣", name: "решетка", tags: ["хэштег", "знак"] },
+          { char: "*️⃣", name: "звездочка", tags: ["знак"] },
+          { char: "💯", name: "сто очков", tags: ["100", "максимум", "цифры"] },
+          { char: "⚠️", name: "предупреждение", tags: ["знак", "внимание"] },
+          { char: "⛔", name: "вход воспрещен", tags: ["стоп", "знак"] },
+          { char: "✅", name: "галочка", tags: ["верно", "ок"] },
+          { char: "❌", name: "крестик", tags: ["нет", "ошибка"] }
+        ]
+      },
+      {
+        id: "ios_stickers",
+        name: "iOS Stickers",
+        icon: "🍏",
+        isStickerCategory: true,
+        stickers: [
+          { name: "iOS Doge", url: "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg/1f436.svg", code: "[Sticker: Doge]" },
+          { name: "iOS Heart Flame", url: "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg/2764.svg", code: "[Sticker: Heart]" },
+          { name: "iOS Cool Emoji", url: "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg/1f60e.svg", code: "[Sticker: Cool]" },
+          { name: "iOS Party", url: "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg/1f973.svg", code: "[Sticker: Party]" },
+          { name: "iOS Fire", url: "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg/1f525.svg", code: "[Sticker: Fire]" },
+          { name: "iOS Rocket", url: "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg/1f680.svg", code: "[Sticker: Rocket]" },
+          { name: "iOS Unicorn", url: "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg/1f984.svg", code: "[Sticker: Unicorn]" },
+          { name: "iOS Cat Laugh", url: "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg/1f639.svg", code: "[Sticker: Cat Laugh]" }
         ]
       }
     ];
@@ -574,7 +707,7 @@
       tabs.innerHTML = TELEGRAM_EMOJI_DATA.map(cat => `
         <button class="emoji-tab-btn ${cat.id === activeCategory ? 'active' : ''}" 
                 onclick="switchEmojiCategory('${cat.id}', this)" title="${cat.name}">
-          ${renderTwemojiSvg(cat.icon)}
+          ${cat.id === 'ios_stickers' ? '🍏' : renderTwemojiSvg(cat.icon)}
         </button>
       `).join('');
     }
@@ -582,7 +715,7 @@
     function switchEmojiCategory(catId, btnEl) {
       activeCategory = catId;
       document.querySelectorAll('.emoji-tab-btn').forEach(btn => btn.classList.remove('active'));
-      btnEl.classList.add('active');
+      if (btnEl) btnEl.classList.add('active');
       document.getElementById('emoji-search-input').value = '';
       renderEmojiGrid();
     }
@@ -595,29 +728,55 @@
       }
 
       let matchedEmojis = [];
+      let matchedStickers = [];
+
       TELEGRAM_EMOJI_DATA.forEach(cat => {
-        cat.emojis.forEach(item => {
-          const nameMatch = item.name.toLowerCase().includes(query);
-          const tagMatch = item.tags.some(t => t.toLowerCase().includes(query));
-          if (nameMatch || tagMatch) {
-            matchedEmojis.push(item);
-          }
-        });
+        if (cat.isStickerCategory) {
+          cat.stickers.forEach(st => {
+            if (st.name.toLowerCase().includes(query)) matchedStickers.push(st);
+          });
+        } else {
+          cat.emojis.forEach(item => {
+            const nameMatch = item.name.toLowerCase().includes(query);
+            const tagMatch = item.tags && item.tags.some(t => t.toLowerCase().includes(query));
+            if (nameMatch || tagMatch) {
+              matchedEmojis.push(item);
+            }
+          });
+        }
       });
 
-      renderEmojiGrid(matchedEmojis);
+      renderEmojiGrid(matchedEmojis, matchedStickers);
     }
 
-    function renderEmojiGrid(customList = null) {
+    function renderEmojiGrid(customList = null, customStickerList = null) {
       const grid = document.getElementById('emoji-grid');
+      const currentCatObj = TELEGRAM_EMOJI_DATA.find(c => c.id === activeCategory);
+
+      if (customStickerList || (currentCatObj && currentCatObj.isStickerCategory)) {
+        let stickersToRender = customStickerList || (currentCatObj ? currentCatObj.stickers : []);
+        if (stickersToRender.length === 0) {
+          grid.innerHTML = `<div style="grid-column: 1 / -1; color: #7F91A4; font-size: 13px; text-align: center; padding: 20px;">Стикеры не найдены</div>`;
+          return;
+        }
+
+        grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+        grid.innerHTML = stickersToRender.map(st => `
+          <div class="sticker-item" onclick="sendStickerDirect('${st.code}')" title="${st.name}">
+            <img src="${st.url}" alt="${st.name}">
+          </div>
+        `).join('');
+        return;
+      }
+
+      grid.style.gridTemplateColumns = 'repeat(8, 1fr)';
       let listToRender = customList;
 
       if (!listToRender) {
-        const cat = TELEGRAM_EMOJI_DATA.find(c => c.id === activeCategory);
-        listToRender = cat ? cat.emojis : [];
+        listToRender = currentCatObj ? currentCatObj.emojis : [];
       }
 
-      if (listToRender.length === 0) {
+      if (!listToRender || listToRender.length === 0) {
         grid.innerHTML = `<div style="grid-column: 1 / -1; color: #7F91A4; font-size: 13px; text-align: center; padding: 20px;">Ничего не найдено</div>`;
         return;
       }
@@ -658,6 +817,12 @@
       const input = document.getElementById('reply-input');
       input.value += emojiChar;
       input.focus();
+    }
+
+    async function sendStickerDirect(stickerCode) {
+      if (!currentChatId) return;
+      await sendCustomMediaMessage(stickerCode);
+      closeEmojiPickerUI();
     }
 
     function toggleHeaderMenu() {
