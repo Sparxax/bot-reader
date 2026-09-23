@@ -1,15 +1,20 @@
 {
-    "name": "Bot Reader",
-    "short_name": "BotReader",
-    "start_url": "./index.html",
-    "display": "standalone",
-    "background_color": "#1D2733",
-    "theme_color": "#242F3D",
-    "icons": [
-      {
-        "src": "https://cdn-icons-png.flaticon.com/512/4712/4712109.png",
-        "sizes": "512x512",
-        "type": "image/png"
-      }
-    ]
-  }
+  "name": "Bot Manager — керування Telegram-ботами",
+  "short_name": "Bot Manager",
+  "description": "Клієнтський застосунок для управління Telegram-ботами через веб-інтерфейс у стилі Telegram",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "background_color": "#17212b",
+  "theme_color": "#3390ec",
+  "orientation": "any",
+  "lang": "uk",
+  "dir": "ltr",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
