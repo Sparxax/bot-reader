@@ -1,1830 +1,207 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Bot Multi-Client (BotReader UI)</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bot Manager</title>
+<meta name="description" content="Клієнтський веб-застосунок для керування Telegram-ботами">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#17212B">
-<meta name="apple-mobile-web-app-capable" content="yes">
-
-<style>
-:root{ --app-height: 100%; --safe-bottom: env(safe-area-inset-bottom, 0px); }
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; overscroll-behavior: none; }
-body { background-color: #0E1621; color: #FFFFFF; height: var(--app-height); display: flex; flex-direction: column; overflow: hidden; position: fixed; width: 100%; inset: 0; }
-
-/* Шапка */
-header { background-color: #17212B; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #0B1118; height: 56px; z-index: 5; flex-shrink: 0; }
-.header-title { font-weight: 600; font-size: 15px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
-.header-subtitle { font-size: 11px; color: #7F91A4; margin-top: 1px; }
-.icon-btn { background: none; border: none; color: #64B5F6; font-size: 20px; cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; }
-
-/* Экраны авторизации и списка диалогов */
-#auth-screen { padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
-.auth-box { width: 100%; max-width: 360px; text-align: center; }
-input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #242F3D; background: #17212B; color: #fff; font-size: 14px; margin: 8px 0; outline: none; user-select: text; }
-.btn-primary { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #5288C1; color: #fff; font-weight: 600; cursor: pointer; text-align: center; }
-.bot-list-item { background: #17212B; padding: 10px; margin: 6px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-
-#dialogs-screen { display: none; flex-direction: column; height: 100%; position: relative; }
-.search-bar { padding: 8px 12px; background: #17212B; border-bottom: 1px solid #0E1621; display: none; }
-.search-bar input { margin: 0; }
-.chat-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.chat-item { display: flex; align-items: center; padding: 12px 16px; background: #17212B; border-bottom: 1px solid #0E1621; cursor: pointer; }
-.chat-item:active { background: #202B36; }
-
-.avatar-box { width: 44px; height: 44px; border-radius: 50%; background: #64B5F6; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px; flex-shrink: 0; font-size: 18px; overflow: hidden; cursor: pointer; }
-.avatar-box img { width: 100%; height: 100%; object-fit: cover; }
-
-.chat-info { flex: 1; min-width: 0; }
-.chat-name { font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
-.chat-time { font-size: 11px; color: #7F91A4; font-weight: normal; }
-.chat-preview-row { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
-.chat-preview { font-size: 13px; color: #7F91A4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
-.badge { background: #5288C1; color: #fff; font-size: 11px; font-weight: bold; padding: 2px 7px; border-radius: 12px; margin-left: 8px; }
-
-/* Drawer (Боковое меню) */
-.drawer-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 150; }
-.drawer { position: fixed; top: 0; left: -75%; width: 75%; height: 100%; background: #17212B; z-index: 160; transition: left 0.25s ease-out; display: flex; flex-direction: column; border-right: 1px solid #0B1118; }
-.drawer.open { left: 0; }
-.drawer-overlay.active { display: block; }
-.drawer-header { padding: 20px 16px 12px 16px; background: #202B36; display: flex; flex-direction: column; gap: 10px; cursor: pointer; position: relative; }
-.drawer-avatar { width: 54px; height: 54px; border-radius: 50%; background: #5288C1; font-size: 22px; font-weight: bold; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.drawer-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.drawer-bot-info { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 16px; margin-top: 4px; }
-.drawer-menu-list { flex: 1; overflow-y: auto; padding: 8px 0; }
-.drawer-accounts-dropdown { display: none; background: #131C24; border-bottom: 1px solid #0B1118; }
-.drawer-item { padding: 14px 16px; display: flex; align-items: center; gap: 16px; font-size: 15px; font-weight: 500; cursor: pointer; }
-.drawer-item:active { background: #202B36; }
-.drawer-item-icon { font-size: 20px; width: 24px; text-align: center; color: #7F91A4; }
-.mini-avatar { width: 32px; height: 32px; border-radius: 50%; background: #5288C1; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
-.mini-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.active-check { color: #64B5F6; margin-left: auto; font-size: 14px; }
-
-/* Чат */
-#chat-room { display: none; flex-direction: column; height: 100%; position: absolute; top:0; left:0; right:0; bottom:0; background: #0E1621; z-index: 10; }
-.chat-bg { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px; display: flex; flex-direction: column; gap: 8px; position: relative; background-color: #0E1621; background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 0); background-size: 24px 24px; }
-.date-divider { align-self: center; background: rgba(16, 22, 30, 0.6); backdrop-filter: blur(4px); color: #7F91A4; font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 12px; margin: 10px 0; }
-.msg-wrapper { display: flex; flex-direction: column; position: relative; transition: transform 0.15s ease-out; touch-action: pan-y; }
-.msg-wrapper.out-align { align-items: flex-end; }
-.msg-bubble { padding: 8px 12px; border-radius: 14px; max-width: 82%; word-break: break-word; font-size: 14px; line-height: 1.35; position: relative; user-select: text; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-.msg-in { background: #182533; color: #fff; align-self: flex-start; border-bottom-left-radius: 4px; }
-.msg-out { background: #8E24AA; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
-.msg-bubble.media-only { padding: 3px; overflow: hidden; }
-.msg-bubble.sticker-bubble { background: transparent !important; box-shadow: none; padding: 0; }
-.msg-meta { font-size: 10px; color: rgba(255,255,255,0.6); text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; float: right; margin-left: 8px; }
-.msg-bubble.media-only .msg-meta { position: absolute; right: 8px; bottom: 6px; background: rgba(0,0,0,0.45); padding: 2px 6px; border-radius: 10px; float: none; margin: 0; }
-.ticks { font-size: 11px; color: #B388FF; font-weight: bold; }
-.reply-quote { background: rgba(0,0,0,0.25); border-left: 3px solid #D1C4E9; padding: 4px 8px; margin-bottom: 6px; border-radius: 4px; font-size: 12px; color: #E1BEE7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.forward-quote { color: #B388FF; font-size: 12px; font-weight: 600; margin-bottom: 3px; }
-.msg-caption { margin-top: 4px; font-size: 14px; }
-.msg-reactions-row { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
-.msg-reaction-chip { background: rgba(255,255,255,0.12); border-radius: 12px; padding: 1px 7px; font-size: 12px; display: inline-flex; align-items: center; gap: 3px; }
-
-/* Медиа в сообщениях */
-.media-photo, .media-video-el { max-width: 260px; width: 100%; border-radius: 12px; display: block; cursor: pointer; background: #0B1118; }
-.media-video-el { max-height: 320px; }
-.media-sticker-img { width: 140px; height: 140px; object-fit: contain; display: block; background: transparent; }
-.media-document { display: flex; align-items: center; gap: 10px; padding: 4px 2px; min-width: 200px; cursor: pointer; }
-.doc-icon { width: 38px; height: 38px; border-radius: 50%; background: #5288C1; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-.doc-info { min-width: 0; }
-.doc-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
-.doc-size { font-size: 11px; color: #a9c0d6; }
-
-.voice-msg { display: flex; align-items: center; gap: 8px; min-width: 210px; padding: 2px 0; }
-.voice-play-btn { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.15); border: none; color: #fff; font-size: 14px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.voice-wave-wrap { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-.voice-wave-canvas { width: 100%; height: 24px; display: block; }
-.voice-time-row { display: flex; justify-content: space-between; align-items: center; }
-.voice-time { font-size: 11px; color: rgba(255,255,255,0.7); }
-.voice-speed-btn { font-size: 10px; background: rgba(255,255,255,0.15); border: none; color: #fff; border-radius: 10px; padding: 1px 6px; cursor: pointer; }
-
-.videonote-player { width: 200px; height: 200px; border-radius: 50%; overflow: hidden; position: relative; background: #000; cursor: pointer; }
-.videonote-player video { width: 100%; height: 100%; object-fit: cover; }
-
-.audio-msg { display: flex; align-items: center; gap: 10px; min-width: 220px; }
-.audio-icon { width: 38px; height: 38px; border-radius: 50%; background: #5288C1; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-.audio-title { font-size: 13px; font-weight: 600; }
-.audio-performer { font-size: 11px; color: #a9c0d6; }
-
-/* Панель ввода */
-.chat-input-wrapper { background: #17212B; border-top: 1px solid #0B1118; display: flex; flex-direction: column; flex-shrink: 0; padding-bottom: var(--safe-bottom); }
-#reply-preview-bar { display: none; background: #17212B; padding: 6px 12px; border-bottom: 1px solid #0B1118; border-left: 3px solid #8E24AA; align-items: center; justify-content: space-between; font-size: 12px; }
-#reply-preview-text { color: #B0BEC5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%; }
-.input-bar { padding: 8px 12px; display: flex; align-items: center; gap: 8px; min-height: 46px; }
-.input-bar input { flex: 1; margin: 0; background: transparent; border: none; color: #fff; font-size: 15px; padding: 6px 0; outline: none; user-select: text; }
-.send-btn { background: none; border: none; color: #5288C1; font-size: 22px; cursor: pointer; padding: 4px 6px; display: flex; align-items: center; justify-content: center; }
-
-.recording-overlay { display: none; flex: 1; align-items: center; gap: 10px; }
-.rec-dot { width: 10px; height: 10px; border-radius: 50%; background: #e53935; animation: pulseRec 1s infinite; }
-@keyframes pulseRec { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-.rec-timer-text { color: #fff; font-size: 14px; font-weight: 500; }
-.rec-live-wave { flex: 1; height: 28px; }
-.rec-cancel-btn { color: #7F91A4; font-size: 13px; background: none; border: none; cursor: pointer; padding: 4px 8px; }
-.record-mode-toggle { display: flex; }
-
-/* Видеокружок — запись */
-.videonote-recorder-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 300; align-items: center; justify-content: center; flex-direction: column; gap: 20px; }
-.videonote-record-circle { width: min(80vw, 300px); height: min(80vw, 300px); border-radius: 50%; overflow: hidden; background: #000; border: 3px solid #5288C1; position: relative; }
-.videonote-record-circle video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-.videonote-controls { display: flex; gap: 30px; align-items: center; }
-.vn-btn { width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 22px; cursor: pointer; display:flex; align-items:center; justify-content:center; }
-.vn-btn.record { background: #e53935; color: #fff; }
-.vn-btn.cancel { background: #242F3D; color: #fff; }
-.vn-btn.send { background: #5288C1; color: #fff; }
-
-/* APPLE EMOJI PICKER */
-.apple-emoji-img { width: 30px; height: 30px; object-fit: contain; pointer-events: none; vertical-align: middle; }
-.apple-tab-img { width: 22px; height: 22px; object-fit: contain; pointer-events: none; }
-.msg-emoji-img { width: 19px; height: 19px; object-fit: contain; vertical-align: -4px; display: inline-block; }
-
-.emoji-picker-container { display: none; flex-direction: column; height: 320px; background: #17212B; border-top: 1px solid #0B1118; }
-.emoji-search-box { padding: 6px 10px; background: #131C24; border-bottom: 1px solid #0B1118; }
-.emoji-search-box input { width: 100%; background: #242F3D; border: none; border-radius: 16px; padding: 6px 12px; color: #fff; font-size: 13px; outline: none; }
-.emoji-categories-tabs { display: flex; justify-content: space-around; background: #17212B; border-bottom: 1px solid #0B1118; padding: 6px 4px; overflow-x: auto; }
-.emoji-tab-btn { background: none; border: none; cursor: pointer; opacity: 0.4; padding: 4px; border-radius: 6px; transition: opacity 0.2s, background 0.2s; flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; }
-.emoji-tab-btn.active { opacity: 1; background: #242F3D; }
-.emoji-grid-scroll { flex: 1; padding: 8px; display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; overflow-y: auto; align-content: start; justify-items: center; }
-.emoji-item { cursor: pointer; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: transform 0.1s, background 0.1s; }
-.emoji-item:hover { background: #242F3D; }
-.emoji-item:active { transform: scale(1.25); }
-
-/* Оверлеи и меню */
-.context-menu-overlay, .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
-.context-menu { background: #17212B; border-radius: 12px; width: 280px; padding: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.5); max-height: 80vh; overflow-y: auto; }
-.reactions-bar { display: flex; justify-content: space-around; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid #242F3D; font-size: 22px; }
-.reaction-btn { cursor: pointer; transition: transform 0.1s; }
-.reaction-btn:active { transform: scale(1.3); }
-.context-item { padding: 10px 12px; color: #fff; font-size: 15px; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 10px; }
-.context-item:active { background: #242F3D; }
-.modal-card { background: #17212B; width: 320px; border-radius: 12px; padding: 20px; text-align: center; max-height: 85vh; overflow-y: auto; }
-.profile-avatar-box { width: 90px; height: 90px; border-radius: 50%; background: #5288C1; font-size: 32px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; overflow: hidden; cursor: pointer; }
-.profile-avatar-box img { width: 100%; height: 100%; object-fit: cover; }
-.copyable-field { padding: 8px; border-radius: 6px; cursor: pointer; transition: background 0.2s; margin-bottom: 4px; }
-.profile-actions { margin-top: 15px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #242F3D; padding-top: 15px; }
-.dropdown-menu { display: none; position: absolute; top: 48px; right: 12px; background: #17212B; border: 1px solid #242F3D; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 100; min-width: 200px; }
-.dropdown-item { padding: 12px 16px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
-.dropdown-item:active { background: #202B36; }
-.empty-state { text-align: center; color: #7F91A4; margin-top: 50px; font-size: 14px; }
-
-/* Lightbox */
-.lightbox-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 400; align-items: center; justify-content: center; flex-direction: column; }
-.lightbox-overlay img, .lightbox-overlay video { max-width: 94vw; max-height: 78vh; border-radius: 6px; object-fit: contain; }
-.lightbox-actions { display: flex; gap: 14px; margin-top: 18px; }
-.lightbox-btn { background: #17212B; color: #fff; border: none; padding: 10px 18px; border-radius: 20px; font-size: 14px; cursor: pointer; display:flex; align-items:center; gap:6px; }
-.lightbox-close { position: absolute; top: 16px; right: 16px; font-size: 26px; color: #fff; background: none; border: none; cursor: pointer; }
-
-/* Список пересылки */
-.forward-chat-item { display: flex; align-items: center; gap: 10px; padding: 10px 6px; cursor: pointer; text-align: left; }
-.forward-chat-item:active { background: #202B36; }
-</style>
+<meta name="theme-color" content="#3390ec">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+<!-- pako (gzip) та lottie-web — лише для рендерингу анімованих TGS-стікерів, завантажуються з CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
 </head>
 <body>
 
-  <!-- Авторизация -->
-  <div id="auth-screen">
-    <div class="auth-box">
-      <h2>Мои Бот-Аккаунты</h2>
-      <div id="saved-bots-list" style="margin: 15px 0;"></div>
-      <input type="text" id="token-input" placeholder="Вставьте API Token бота">
-      <input type="text" id="bot-name-input" placeholder="Название бота">
-      <button class="btn-primary" onclick="addBot()">Добавить бота</button>
+<!-- ===== Екран блокування / входу за PIN ===== -->
+<div id="lock-screen" class="overlay hidden">
+  <div class="modal" style="text-align:center;">
+    <h2 id="lock-title">Введіть PIN-код</h2>
+    <p id="lock-sub" style="color:var(--text-2);font-size:13px;">Дані застосунку зашифровані локально</p>
+    <div class="pin-dots" id="pin-dots"></div>
+    <div class="keypad" id="keypad"></div>
+    <p id="lock-error" style="color:var(--danger);font-size:13px;min-height:18px;"></p>
+  </div>
+</div>
+
+<!-- ===== Онбординг: перший запуск ===== -->
+<div id="onboard-screen" class="overlay hidden">
+  <div class="modal">
+    <h2>Ласкаво просимо 👋</h2>
+    <p style="color:var(--text-2);font-size:14px;">Це клієнтський застосунок для керування Telegram-ботами. Усі дані (токени, чати, повідомлення) зберігаються лише у вашому браузері й ніколи не покидають ваш пристрій, окрім прямих запитів до api.telegram.org.</p>
+    <label>Захистити застосунок PIN-кодом? (рекомендовано)</label>
+    <div class="actions" style="justify-content:space-between;">
+      <button class="btn btn-secondary" id="skip-pin">Пропустити</button>
+      <button class="btn btn-primary" id="setup-pin">Встановити PIN</button>
     </div>
   </div>
+</div>
 
-  <!-- Список диалогов -->
-  <div id="dialogs-screen">
-    <header>
-      <button class="icon-btn" onclick="toggleDrawer()">☰</button>
-      <div style="flex:1; margin-left: 12px;">
-        <div class="header-title" id="active-bot-title">Чат Бот</div>
-        <div class="header-subtitle" id="status-text">Соединение...</div>
+<!-- ===== Модалка: додати бота ===== -->
+<div id="add-bot-modal" class="overlay hidden">
+  <div class="modal">
+    <h2>Додати бота</h2>
+    <label>Токен бота (від @BotFather)</label>
+    <input type="password" id="bot-token-input" placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11">
+    <p style="font-size:12px;color:var(--text-2);">Токен перевіряється напряму запитом getMe до Telegram і зберігається лише локально (зашифровано, якщо увімкнено PIN).</p>
+    <p id="add-bot-error" style="color:var(--danger);font-size:13px;"></p>
+    <div class="actions">
+      <button class="btn btn-secondary" data-close>Скасувати</button>
+      <button class="btn btn-primary" id="confirm-add-bot">Додати</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Модалка: налаштування ===== -->
+<div id="settings-modal" class="overlay hidden">
+  <div class="modal" style="max-width:480px;">
+    <h2>Налаштування</h2>
+
+    <div class="settings-section">
+      <h3>Оформлення</h3>
+      <div class="settings-row"><span>Тема</span>
+        <select id="theme-select">
+          <option value="system">Системна</option>
+          <option value="light">Світла</option>
+          <option value="dark">Темна</option>
+        </select>
       </div>
-      <button class="icon-btn" onclick="toggleSearchBar()" title="Поиск">🔍</button>
-    </header>
-
-    <div class="search-bar" id="search-bar-container">
-      <input type="text" id="search-input" placeholder="Поиск чатов..." oninput="renderDialogsList()">
+      <div class="settings-row"><span>Акцентний колір</span>
+        <div id="accent-dots" style="display:flex;gap:8px;"></div>
+      </div>
     </div>
 
-    <div class="chat-list" id="dialogs-container">
-      <div class="empty-state">Нет активных диалогов</div>
+    <div class="settings-section">
+      <h3>Безпека</h3>
+      <div class="settings-row"><span>Шифрування PIN-кодом</span>
+        <label class="switch"><input type="checkbox" id="toggle-encryption"><span class="slider"></span></label>
+      </div>
     </div>
 
-    <!-- Боковое меню -->
-    <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
-    <div class="drawer" id="drawer-menu">
-      <div class="drawer-header" onclick="toggleAccountsDropdown()">
-        <div class="drawer-avatar" id="drawer-bot-avatar">🤖</div>
-        <div class="drawer-bot-info">
-          <span id="drawer-bot-name">Админ</span>
-          <span id="drawer-arrow">▼</span>
+    <div class="settings-section">
+      <h3>З'єднання з поточним ботом</h3>
+      <div class="settings-row"><span>Режим</span>
+        <select id="connection-mode">
+          <option value="polling">Long Polling</option>
+          <option value="webhook">Webhook (потребує власний сервер)</option>
+        </select>
+      </div>
+      <div id="polling-interval-row" class="settings-row"><span>Інтервал опитування, мс</span>
+        <input type="text" id="polling-interval" style="width:90px;text-align:right;" value="1000">
+      </div>
+      <div id="webhook-row" class="hidden">
+        <label>URL вебхука</label>
+        <input type="url" id="webhook-url" placeholder="https://your-server.example.com/hook">
+        <p style="font-size:12px;color:var(--text-2);">GitHub Pages — статичний хостинг і не може приймати вхідні POST-запити від Telegram. Для Webhook потрібен окремий сервер (наприклад, Cloudflare Workers). Без нього використовуйте Long Polling.</p>
+        <button class="btn btn-secondary" id="apply-webhook" style="margin-top:6px;">Зареєструвати webhook</button>
+        <button class="btn btn-secondary" id="remove-webhook">Видалити webhook</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Сповіщення</h3>
+      <div class="settings-row"><span>Звук нових повідомлень</span>
+        <label class="switch"><input type="checkbox" id="toggle-sound" checked><span class="slider"></span></label>
+      </div>
+      <div class="settings-row"><span>Push-сповіщення (Service Worker)</span>
+        <label class="switch"><input type="checkbox" id="toggle-push"><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Профіль бота</h3>
+      <label>Ім'я бота</label><input type="text" id="bot-name-input">
+      <label>Опис (About)</label><textarea id="bot-desc-input" rows="2"></textarea>
+      <label>Короткий опис</label><input type="text" id="bot-short-desc-input">
+      <label>Команди меню (по одній: команда — опис)</label>
+      <textarea id="bot-commands-input" rows="3" placeholder="start — Почати&#10;help — Допомога"></textarea>
+      <p style="font-size:12px;color:var(--text-2);">Аватар бота Telegram Bot API дозволяє встановити лише вручну через @BotFather — прямого методу API для цього не існує.</p>
+      <button class="btn btn-primary" id="save-bot-profile" style="margin-top:6px;">Зберегти профіль бота</button>
+      <p id="profile-save-msg" style="font-size:12px;color:var(--online);"></p>
+    </div>
+
+    <div class="settings-section">
+      <h3>Резервне копіювання</h3>
+      <div class="actions" style="justify-content:flex-start;">
+        <button class="btn btn-secondary" id="export-backup">Експортувати JSON</button>
+        <button class="btn btn-secondary" id="import-backup">Імпортувати JSON</button>
+        <input type="file" id="import-file-input" accept="application/json" class="hidden">
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Небезпечна зона</h3>
+      <div class="actions" style="justify-content:flex-start;">
+        <button class="btn btn-danger" id="remove-bot-btn">Видалити цього бота</button>
+      </div>
+    </div>
+
+    <div class="actions"><button class="btn btn-primary" data-close>Готово</button></div>
+  </div>
+</div>
+
+<!-- ===== Основний застосунок ===== -->
+<div id="app">
+  <!-- LEFT -->
+  <div id="left-panel" class="panel">
+    <div id="bot-switcher"></div>
+    <div class="panel-header">
+      <span class="title" id="left-title">Чати</span>
+      <button class="icon-btn" id="open-settings-btn" title="Налаштування">⚙️</button>
+    </div>
+    <div id="search-box">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input type="text" id="chat-search" placeholder="Пошук чатів">
+    </div>
+    <div id="chat-list"></div>
+  </div>
+
+  <!-- CENTER -->
+  <div id="center-panel" class="panel">
+    <div id="chat-empty">
+      <div style="font-size:48px;">💬</div>
+      <div>Оберіть чат, щоб почати спілкування</div>
+    </div>
+    <div id="chat-view" class="hidden">
+      <div class="panel-header" id="chat-header">
+        <button class="icon-btn hidden" id="back-btn">←</button>
+        <div class="avatar" id="chat-header-avatar" style="width:38px;height:38px;font-size:14px;"></div>
+        <div style="flex:1;min-width:0;">
+          <div class="title" id="chat-header-name"></div>
+          <div class="status" id="chat-header-status"></div>
         </div>
+        <button class="icon-btn" id="chat-info-btn" title="Інформація">ℹ️</button>
       </div>
-      <div class="drawer-accounts-dropdown" id="drawer-accounts-list"></div>
-      <div class="drawer-menu-list">
-        <div class="drawer-item" onclick="openAddBotModal()">
-          <span class="drawer-item-icon">➕</span>
-          <span>Добавить Аккаунт</span>
-        </div>
-        <div class="drawer-item" onclick="openMyProfileFromDrawer()">
-          <span class="drawer-item-icon">👤</span>
-          <span>Мой Профиль</span>
-        </div>
+      <div id="messages"></div>
+      <div id="typing-indicator" class="typing-indicator hidden">друкує…</div>
+      <div id="reply-preview" class="reply-preview hidden">
+        <div class="bar"></div>
+        <div class="txt" id="reply-preview-text"></div>
+        <button class="icon-btn" id="cancel-reply">✕</button>
       </div>
-    </div>
-  </div>
-
-  <!-- Экран чата -->
-  <div id="chat-room">
-    <header>
-      <button class="icon-btn" onclick="triggerHardwareBack()" style="font-size: 22px;">←</button>
-
-      <div style="flex:1; margin-left: 8px; display:flex; align-items:center; cursor:pointer;" onclick="openUserProfile()">
-        <div class="avatar-box" id="room-header-avatar" style="width:38px; height:38px; font-size:15px; margin-right:10px;">U</div>
-        <div style="min-width:0;">
-          <div class="header-title" id="room-user-name">Пользователь</div>
-          <div class="header-subtitle" id="room-user-status">был(а) недавно</div>
-        </div>
-      </div>
-
-      <button class="icon-btn" onclick="toggleHeaderMenu()">⋮</button>
-
-      <div class="dropdown-menu" id="header-dropdown">
-        <div class="dropdown-item" id="menu-mute-btn" onclick="toggleMuteChat()">🔕 Отключить уведомления</div>
-        <div class="dropdown-item" style="color:#e53935;" onclick="deleteCurrentChat()">🗑️ Удалить чат</div>
-      </div>
-    </header>
-
-    <div class="chat-bg" id="room-messages"></div>
-
-    <!-- Панель ввода -->
-    <div class="chat-input-wrapper">
-      <div id="reply-preview-bar">
-        <div>
-          <div style="color: #B388FF; font-weight: bold;" id="reply-preview-label">Ответ на сообщение:</div>
-          <div id="reply-preview-text">...</div>
-        </div>
-        <button class="icon-btn" onclick="cancelReplyQuote()" style="font-size:14px; color:#aaa;">✕</button>
-      </div>
-
-      <div class="input-bar" id="main-input-bar">
-        <button class="icon-btn" onclick="toggleEmojiPicker()" style="color:#7F91A4;">😊</button>
-        <input type="text" id="reply-input" placeholder="Сообщение" onkeypress="handleKeyPress(event)" oninput="updateSendButtonUI()">
-
-        <input type="file" id="media-file-input" style="display:none;" onchange="handleFileSend(event)">
-        <button class="icon-btn" onclick="document.getElementById('media-file-input').click()" style="color:#7F91A4;" title="Прикрепить файл" id="attach-btn">📎</button>
-
-        <div class="recording-overlay" id="rec-overlay">
-          <div class="rec-dot"></div>
-          <span class="rec-timer-text" id="rec-timer">00:00</span>
-          <canvas class="rec-live-wave" id="rec-live-wave"></canvas>
-          <button class="rec-cancel-btn" onclick="cancelVoiceRecording()">Отмена</button>
-        </div>
-
-        <button class="icon-btn" id="videonote-btn" onclick="openVideoNoteRecorder()" style="color:#7F91A4;" title="Видеосообщение">📹</button>
-        <button class="icon-btn" id="media-record-btn" onclick="handleRecordClick()" style="color:#7F91A4;" title="Голосовое сообщение">🎙️</button>
-        <button class="send-btn" id="send-plane-btn" onclick="sendReply()" style="display:none;" title="Отправить">➤</button>
-      </div>
-
-      <!-- EMOJI PICKER -->
-      <div class="emoji-picker-container" id="emoji-picker">
-        <div class="emoji-search-box">
-          <input type="text" id="emoji-search-input" placeholder="Поиск эмодзи... (рус./eng.)" oninput="filterEmojiBySearch()">
-        </div>
-
-        <div class="emoji-categories-tabs" id="emoji-tabs"></div>
-        <div class="emoji-grid-scroll" id="emoji-grid"></div>
+      <div id="composer">
+        <button class="icon-btn" id="attach-btn" title="Прикріпити">📎</button>
+        <input type="file" id="file-input" class="hidden">
+        <textarea id="msg-input" placeholder="Повідомлення" rows="1"></textarea>
+        <button class="icon-btn" id="emoji-btn" title="Формат">＊</button>
+        <button class="icon-btn send-btn" id="send-btn" title="Надіслати">➤</button>
       </div>
     </div>
   </div>
 
-  <!-- Запись видеокружка -->
-  <div class="videonote-recorder-overlay" id="videonote-overlay">
-    <div class="videonote-record-circle">
-      <video id="videonote-preview" autoplay muted playsinline></video>
+  <!-- RIGHT -->
+  <div id="right-panel" class="panel hidden">
+    <div class="panel-header">
+      <span class="title">Інформація</span>
+      <button class="icon-btn" id="close-right-btn">✕</button>
     </div>
-    <div class="videonote-controls" id="videonote-controls">
-      <button class="vn-btn cancel" onclick="closeVideoNoteRecorder()" title="Отмена">✕</button>
-      <button class="vn-btn record" id="vn-record-btn" onclick="toggleVideoNoteRecording()" title="Запись">⏺</button>
-      <button class="vn-btn send" id="vn-send-btn" onclick="sendVideoNoteRecording()" title="Отправить" style="display:none;">➤</button>
-    </div>
+    <div class="content" id="right-content"></div>
   </div>
+</div>
 
-  <!-- Lightbox -->
-  <div class="lightbox-overlay" id="lightbox-overlay" onclick="closeLightbox(event)">
-    <button class="lightbox-close" onclick="closeLightbox(event)">✕</button>
-    <div id="lightbox-media-holder" onclick="event.stopPropagation()"></div>
-    <div class="lightbox-actions">
-      <a class="lightbox-btn" id="lightbox-download" href="#" download target="_blank" onclick="event.stopPropagation()">⬇️ Сохранить</a>
-    </div>
-  </div>
-
-  <!-- Модальные окна -->
-  <div class="context-menu-overlay" id="context-menu-overlay" onclick="closeContextMenu()">
-    <div class="context-menu" onclick="event.stopPropagation()">
-      <div class="reactions-bar">
-        <span class="reaction-btn" onclick="setReaction('👍')">👍</span>
-        <span class="reaction-btn" onclick="setReaction('❤️')">❤️</span>
-        <span class="reaction-btn" onclick="setReaction('🔥')">🔥</span>
-        <span class="reaction-btn" onclick="setReaction('😂')">😂</span>
-        <span class="reaction-btn" onclick="setReaction('😮')">😮</span>
-        <span class="reaction-btn" onclick="setReaction('😢')">😢</span>
-      </div>
-      <div class="context-item" onclick="contextReply()">↩️ Ответить</div>
-      <div class="context-item" onclick="contextForward()">↪️ Переслать</div>
-      <div class="context-item" style="color:#e53935;" onclick="openDeleteModal()">🗑️ Удалить...</div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="delete-modal" onclick="closeDeleteModal()">
-    <div class="modal-card" onclick="event.stopPropagation()">
-      <h3>Удаление сообщения</h3>
-      <p style="font-size:13px; color:#7F91A4; margin: 10px 0 20px 0;">Выберите, где удалить выбранное сообщение:</p>
-      <button class="btn-primary" style="margin-bottom:10px;" onclick="executeDelete(false)">Удалить только у себя</button>
-      <button class="btn-primary" style="background:#e53935;" onclick="executeDelete(true)">Удалить у всех</button>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="forward-modal" onclick="closeForwardModal()">
-    <div class="modal-card" onclick="event.stopPropagation()">
-      <h3>Переслать сообщение</h3>
-      <div id="forward-chat-list" style="margin-top:12px; text-align:left; max-height: 300px; overflow-y:auto;"></div>
-      <button class="btn-primary" style="margin-top:15px; background:none; color:#7F91A4;" onclick="closeForwardModal()">Отмена</button>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="profile-modal" onclick="closeProfileModal()">
-    <div class="modal-card" onclick="event.stopPropagation()">
-      <div class="profile-avatar-box" id="modal-avatar-box" onclick="openAvatarLightboxFromModal()">U</div>
-      <div class="copyable-field" onclick="copyText(document.getElementById('modal-name').innerText)">
-        <h3 id="modal-name">Имя</h3>
-      </div>
-      <div class="copyable-field" onclick="copyText(document.getElementById('modal-username').innerText)">
-        <p id="modal-username" style="color:#7F91A4;">@username</p>
-      </div>
-      <div class="copyable-field" onclick="copyText(document.getElementById('modal-id-val').innerText)">
-        <p style="font-size:12px; color:#5288C1;">ID: <span id="modal-id-val">0000000</span></p>
-      </div>
-
-      <div class="profile-actions" id="my-profile-tools" style="display:none;">
-        <button class="btn-primary" style="background:#242F3D;" onclick="openBackupModal()">💾 Резервные копии</button>
-        <button class="btn-primary" style="background:#e53935;" onclick="clearAllData()">🗑️ Сбросить все данные</button>
-      </div>
-
-      <button class="btn-primary" style="margin-top:15px; background:#182533;" onclick="closeProfileModal()">Закрыть</button>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="add-account-modal" onclick="closeAddBotModal()">
-    <div class="modal-card" onclick="event.stopPropagation()">
-      <h3>Добавить бота</h3>
-      <input type="text" id="drawer-token-input" placeholder="API Token бота" style="margin-top:15px;">
-      <input type="text" id="drawer-name-input" placeholder="Название аккаунта">
-      <button class="btn-primary" style="margin-top:10px;" onclick="addBotFromDrawer()">Сохранить</button>
-      <button class="btn-primary" style="margin-top:8px; background:none; color:#7F91A4;" onclick="closeAddBotModal()">Отмена</button>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="backup-modal" onclick="closeBackupModal()">
-    <div class="modal-card" onclick="event.stopPropagation()">
-      <h3>Резервные копии</h3>
-      <button class="btn-primary" style="margin-bottom:10px;" onclick="exportBackup()">📥 Экспортировать базу</button>
-      <button class="btn-primary" style="background:#242F3D; margin-bottom:10px;" onclick="document.getElementById('import-file-input').click()">📤 Импортировать из файла</button>
-      <input type="file" id="import-file-input" style="display:none;" accept=".json" onchange="importBackup(event)">
-      <button class="btn-primary" style="background:none; color:#7F91A4;" onclick="closeBackupModal()">Закрыть</button>
-    </div>
-  </div>
-
-  <script>
-/* ==================== БАЗОВОЕ ХРАНИЛИЩЕ ==================== */
-const MASTER_STORAGE_KEY = 'bot_reader_chats_master';
-
-function loadMasterDB() {
-  try { return JSON.parse(localStorage.getItem(MASTER_STORAGE_KEY) || '{}'); } catch(e) { return {}; }
-}
-function saveDB() {
-  try { localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(db)); } catch(e) {}
-}
-
-let bots = [];
-try { bots = JSON.parse(localStorage.getItem('app_bots') || '[]'); } catch(e) { bots = []; }
-
-let activeBotToken = localStorage.getItem('app_active_token') || '';
-let db = loadMasterDB();
-
-let currentChatId = null;
-let selectedReplyMsgId = null;
-let selectedContextMsgId = null;
-let forwardSourceMsgId = null;
-let pollInterval = null;
-let isHistoryPushed = false;
-let isEmojiPickerPushed = false;
-let isVideoNoteOverlayPushed = false;
-
-/* ==================== МОБИЛЬНЫЙ VIEWPORT / КЛАВИАТУРА ==================== */
-function updateAppHeight() {
-  const vv = window.visualViewport;
-  const h = vv ? vv.height : window.innerHeight;
-  document.documentElement.style.setProperty('--app-height', h + 'px');
-}
-updateAppHeight();
-window.addEventListener('resize', updateAppHeight);
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', updateAppHeight);
-  window.visualViewport.addEventListener('scroll', updateAppHeight);
-}
-
-/* ==================== APPLE EMOJI (iOS СТИЛЬ ЧЕРЕЗ CDN) ==================== */
-function getAppleEmojiUrl(char) {
-  return `https://emojicdn.elk.sh/${encodeURIComponent(char)}?style=apple`;
-}
-
-// Регулярное выражение для обнаружения emoji-последовательностей в произвольном тексте
-const EMOJI_REGEX = /(\p{Extended_Pictographic}(\uFE0F|\uFE0E)?(\u200D\p{Extended_Pictographic}(\uFE0F|\uFE0E)?)*|[#*0-9]\uFE0F?\u20E3|\uD83C[\uDDE6-\uDDFF]\uD83C[\uDDE6-\uDDFF])/gu;
-
-// Заменяет символы эмодзи в тексте на <img> в стиле iOS (Apple), сохраняя остальной текст как есть (экранированный)
-function renderTextWithEmoji(rawText) {
-  const text = rawText == null ? '' : String(rawText);
-  const escaped = escapeHtml(text);
-  // escapeHtml не трогает emoji-символы (они не содержат &,<,>), поэтому безопасно применять regex после экранирования
-  return escaped.replace(EMOJI_REGEX, (m) => {
-    return `<img class="msg-emoji-img" src="${getAppleEmojiUrl(m)}" alt="${m}" loading="lazy">`;
-  });
-}
-
-/* TELEGRAM EMOJI CATEGORIES */
-const TELEGRAM_EMOJI_CATEGORIES = [
-  { id: "recent", name: "Недавние", icon: "🕒" },
-  { id: "smileys", name: "Смайлы и эмоции", icon: "😀" },
-  { id: "gestures", name: "Люди и жесты", icon: "👋" },
-  { id: "animals", name: "Животные и природа", icon: "🐻" },
-  { id: "nature", name: "Растения и погода", icon: "🌿" },
-  { id: "food", name: "Еда и напитки", icon: "🍔" },
-  { id: "activity", name: "Спорт и активность", icon: "⚽" },
-  { id: "travel", name: "Путешествия и места", icon: "🚗" },
-  { id: "objects", name: "Предметы", icon: "💡" },
-  { id: "symbols", name: "Символы", icon: "🔣" },
-  { id: "flags", name: "Флаги", icon: "🏁" }
-];
-
-let recentEmojisList = JSON.parse(localStorage.getItem('recent_apple_emojis') || '["👍", "❤️", "🔥", "😂", "😊", "🎉", "✨", "🙌"]');
-
-const LOCAL_EMOJI_DATABASE = {
-  smileys: ["😀","😃","😄","😁","😆","😅","🤣","😂","🙂","🙃","🫠","😉","😊","😇","🥰","😍","🤩","😘","😗","😚","😙","🥲","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🫢","🫣","🤫","🤔","🫡","🤐","🤨","😐","😑","😶","🫥","😏","😒","🙄","😬","🤥","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🤧","🥵","🥶","🥴","😵","🤯","🤠","🥳","🥸","😎","🤓","🧐","😕","🫤","😟","🙁","☹️","😮","😯","😲","😳","🥺","🥹","😦","😧","😨","😰","😥","😢","😭","😱","😖","😣","😞","😓","😩","😫","🥱","😤","😡","😠","🤬","😈","👿","💀","☠️","💩","🤡","👹","👺","👻","👽","👾","🤖","😺","😸","😹","😻","😼","😽","🙀","😿","😾"],
-  gestures: ["👋","🤚","🖐️","✋","🖖","🫱","🫲","🫳","🫴","👌","🤌","🤏","✌️","🤞","🫰","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","🫵","👍","👎","✊","👊","🤛","🤜","👏","🙌","🫶","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦿","🦵","🦶","👂","🦻","👃","🧠","🫀","🫁","🦷","🦴","👀","👁️","👅","👄","🫦"],
-  animals: ["🐵","🐒","🦍","🦧","🐶","🐕","🦮","🐕‍🦺","🐩","🐺","🦊","🦝","🐱","🐈","🐈‍⬛","🦁","🐯","🐅","🐆","🐴","🐎","🦄","🦓","🦌","🦬","🐮","🐂","🐃","🐄","🐷","🐖","🐗","🐽","🐏","🐑","🐐","🐪","🐫","🦙","🦒","🐘","🦣","🦏","🦛","🐭","🐁","🐀","🐹","🐰","🐇","🐿️","🦫","🦔","🦇","🐻","🐻‍❄️","🐨","🐼","🦥","🦦","🦨","🦘","🦡","🐾","🦃","🐔","🐓","🐣","🐤","🐥","🐦","🐧","🕊️","🦅","🦆","🦢","🦉","🦤","🪶","🦩","🦚","🦜","🐸","🐊","🐢","🦎","🐍","🐲","🐉","🦕","🦖","🐳","🐋","🐬","🦭","🐟","🐠","🐡","🦈","🐙","🐚","🪸","🐌","🦋","🐛","🐜","🐝","🪲","🐞","🦗","🪳","🕷️","🕸️","🦂","🦟","🪰","🪱","🦠"],
-  nature: ["💐","🌸","💮","🪷","🏵️","🌹","🥀","🌺","🌻","🌼","🌷","🪻","🌱","🪴","🌲","🌳","🌴","🌵","🌾","🌿","☘️","🍀","🍁","🍂","🍃","🪺","🪹","🍄","🌰","🦀","🦞","🦐","🦑","🪼","🌍","🌎","🌏","🌕","🌖","🌗","🌘","🌑","🌒","🌓","🌔","🌙","🌛","🌜","☀️","🌝","🌞","🪐","⭐","🌟","🌠","🌌","☁️","⛅","⛈️","🌤️","🌥️","🌦️","🌧️","⛆","🌩️","🌨️","❄️","☃️","⛄","🌬️","💨","💧","💦","☔","☂️","🌊","🌫️"],
-  food: ["🍏","🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🫐","🍈","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🍆","🥑","🥦","🥬","🥒","🌶️","🫑","🌽","🥕","🫒","🧄","🧅","🥔","🍠","🫘","🥐","🥯","🍞","🥖","🥨","🧀","🥚","🍳","🧈","🥞","🧇","🥓","🥩","🍗","🍖","🦴","🌭","🍔","🍟","🍕","🫓","🥪","🥙","🧆","🌮","🌯","🫔","🥗","🥘","🫕","🥫","🍝","🍜","🍲","🍛","🍣","🍱","🥟","🦪","🍤","🍙","🍚","🍘","🍥","🥠","🥮","🍢","🍡","🍧","🍨","🍦","🥧","🧁","🍰","🎂","🍮","🍭","🍬","🍫","🍿","🍩","🍪","🌰","🥜","🍯","🥛","🍼","🫖","☕","🍵","🧃","🥤","🧋","🍶","🍺","🍻","🥂","🍷","🥃","🍸","🍹","🧉","🍾","🧊","🥄","🍴","🍽️","🥣","🥡","🥢","🧂"],
-  activity: ["⚽","🏀","🏈","⚾","🥎","🎾","🏐","🏉","🥏","🎱","🪀","🏓","🏸","🏒","🏑","🥍","🏏","🪃","🥅","⛳","🪁","🏹","🎣","🤿","🥊","🥋","🎽","🛹","🛼","🛷","⛸️","🥌","🎿","⛷️","🏂","🪂","🏋️","🤼","🤸","⛹️","🤺","🤾","🏌️","🏇","🧘","🏄","🏊","🤽","🚣","🧗","🚵","🚴","🏆","🥇","🥈","🥉","🏅","🎖️","🏵️","🎗️","🎫","🎟️","🎪","🤹","🎭","🩰","🎨","🎬","🎤","🎧","🎼","🎹","🥁","🪘","🎷","🎺","🪗","🎸","🪕","🎻","🎲","♟️","🎯","🎳","🎮","🎰","🧩"],
-  travel: ["🚗","🚕","🚙","🚌","🚎","🏎️","🚓","🚑","🚒","🚐","🛻","🚚","🚛","🚜","🛵","🏍️","🛺","🚲","🛴","🚨","🚔","🚍","🚘","🚖","🛞","🚏","🛣️","🛤️","⛽","🚧","⚓","🛟","⛵","🛶","🚤","🛳️","⛴️","🛥️","🚢","✈️","🛩️","🛫","🛬","🪂","💺","🚁","🚟","🚠","🚡","🛰️","🚀","🛸","🎡","🎢","🎠","🏗️","🌁","🗼","🏰","🏯","🏟️","🎪","🚉","🚝","🚞","🚋","🚃","🚟","🗺️","🧭","🏔️","⛰️","🌋","🗻","🏕️","🏖️","🏜️","🏝️","🏞️","🏟️","🏛️","🏗️","🧱","🏘️","🏚️","🏠","🏡","🏢","🏣","🏤","🏥","🏦","🏨","🏩","🏪","🏫","🏬","🏭","🏯","🏰","💒","🗽"],
-  objects: ["⌚","📱","💻","⌨️","🖥️","🖨️","🖱️","🕹️","💽","💾","💿","📀","📷","📸","📹","🎥","📽️","🎞️","📞","☎️","📟","📠","📺","📻","🎙️","⏱️","⏲️","⏰","🕰️","⌛","⏳","📡","🔋","🪫","🔌","💡","🔦","🕯️","🪔","🧯","🛢️","💸","💵","💴","💶","💷","🪙","💰","💳","🧾","💎","⚖️","🪜","🧰","🪛","🔧","🔨","⚒️","🛠️","⛏️","🪚","🔩","⚙️","🪤","🧱","⛓️","🧲","🔫","💣","🧨","🪓","🔪","🗡️","⚔️","🛡️","🚬","⚰️","🪦","⚱️","🏺","🔮","📿","🧿","💈","⚗️","🔭","🔬","🕳️","💊","💉","🩸","🩹","🩺","🚪","🛗","🪞","🪟","🛏️","🛋️","🪑","🚽","🪠","🚿","🛁","🪤","🪒","🧴","🧷","🧹","🧺","🧻","🪣","🧼","🫧","🪥","🧽","🧯","🛒"],
-  symbols: ["❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❤️‍🔥","❤️‍🩹","💕","💞","💓","💗","💖","💘","💝","💟","☮️","✝️","☪️","🕉️","☸️","✡️","🔯","🕎","☯️","☦️","🛐","⛎","♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓","🆔","⚛️","🈳","🈹","☢️","☣️","📴","📳","🈶","🈚","🈸","🈺","🈷️","✴️","🆚","💮","🉐","㊙️","㊗️","🈴","🈵","🈲","🅰️","🅱️","🆎","🆑","🅾️","🆘","❌","⭕","🛑","⛔","📛","🚫","💯","💢","♨️","🚷","🚯","🚳","🚱","🔞","📵","🚭","❗","❓","‼️","⁉️","💤","🏧","🚾","♿","🅿️","🚰","🚹","🚺","🚼","⚧️","🚻","🚮","🎦","📶","🈁","🔣","ℹ️","🔤","🔡","🔠","🆖","🆗","🆙","🆒","🆕","🆓","0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟","🔢","#️⃣","*️⃣","⏏️","▶️","⏸️","⏯️","⏹️","⏺️","⏭️","⏮️","⏩","⏪","⏫","⏬","◀️","🔼","🔽","➡️","⬅️","⬆️","⬇️","↗️","↘️","↙️","↖️","↕️","↔️","↪️","↩️","⤴️","⤵️","🔀","🔁","🔂","🔄","🔃"],
-  flags: ["🏁","🚩","🎌","🏴","🏳️","🏳️‍🌈","🏳️‍⚧️","🏴‍☠️","🇺🇳","🇺🇦","🇷🇺","🇺🇸","🇬🇧","🇩🇪","🇫🇷","🇮🇹","🇪🇸","🇵🇹","🇳🇱","🇧🇪","🇨🇭","🇦🇹","🇸🇪","🇳🇴","🇩🇰","🇫🇮","🇮🇸","🇮🇪","🇵🇱","🇨🇿","🇸🇰","🇭🇺","🇷🇴","🇧🇬","🇬🇷","🇹🇷","🇮🇱","🇸🇦","🇦🇪","🇪🇬","🇿🇦","🇳🇬","🇰🇪","🇨🇳","🇯🇵","🇰🇷","🇮🇳","🇮🇩","🇹🇭","🇻🇳","🇵🇭","🇲🇾","🇸🇬","🇦🇺","🇳🇿","🇨🇦","🇲🇽","🇧🇷","🇦🇷","🇨🇱","🇨🇴","🇵🇪","🇪🇺","🇰🇿","🇧🇾","🇬🇪","🇦🇲","🇦🇿","🇺🇿"],
-};
-const RU_EMOJI_KEYWORDS = {
-  "смех": ["😂","🤣","😆","😹"],
-  "улыбка": ["😀","😊","🙂","☺️"],
-  "грусть": ["😢","😭","😔","🙁"],
-  "любовь": ["❤️","😍","🥰","💕"],
-  "сердце": ["❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","💕","💖"],
-  "злость": ["😠","😡","🤬","👿"],
-  "огонь": ["🔥"],
-  "звезда": ["⭐","🌟","✨","🌠"],
-  "кот": ["🐱","🐈","😺","😻","🐈‍⬛"],
-  "кошка": ["🐱","🐈","😺"],
-  "собака": ["🐶","🐕","🐩"],
-  "пес": ["🐶","🐕"],
-  "мишка": ["🐻","🧸"],
-  "медведь": ["🐻","🐻‍❄️"],
-  "заяц": ["🐰","🐇"],
-  "лиса": ["🦊"],
-  "тигр": ["🐯","🐅"],
-  "лев": ["🦁"],
-  "обезьяна": ["🐵","🐒"],
-  "панда": ["🐼"],
-  "свинья": ["🐷","🐖"],
-  "корова": ["🐮","🐄"],
-  "лошадь": ["🐴","🐎"],
-  "единорог": ["🦄"],
-  "птица": ["🐦","🐧","🦅","🦉"],
-  "сова": ["🦉"],
-  "орел": ["🦅"],
-  "рыба": ["🐟","🐠","🐡"],
-  "акула": ["🦈"],
-  "дельфин": ["🐬"],
-  "кит": ["🐳","🐋"],
-  "змея": ["🐍"],
-  "дракон": ["🐉","🐲"],
-  "бабочка": ["🦋"],
-  "пчела": ["🐝"],
-  "паук": ["🕷️"],
-  "цветок": ["🌸","🌹","🌻","🌷","💐"],
-  "роза": ["🌹"],
-  "дерево": ["🌳","🌲","🌴"],
-  "солнце": ["☀️","🌞"],
-  "луна": ["🌙","🌕","🌛"],
-  "дождь": ["🌧️","☔"],
-  "снег": ["❄️","☃️","⛄"],
-  "радуга": ["🌈"],
-  "молния": ["⚡","🌩️"],
-  "вода": ["💧","🌊"],
-  "еда": ["🍔","🍕","🍎"],
-  "яблоко": ["🍎","🍏"],
-  "банан": ["🍌"],
-  "пицца": ["🍕"],
-  "бургер": ["🍔"],
-  "торт": ["🎂","🍰"],
-  "кофе": ["☕"],
-  "чай": ["🍵","🫖"],
-  "пиво": ["🍺","🍻"],
-  "вино": ["🍷"],
-  "арбуз": ["🍉"],
-  "клубника": ["🍓"],
-  "виноград": ["🍇"],
-  "мороженое": ["🍦","🍨"],
-  "хлеб": ["🍞"],
-  "сыр": ["🧀"],
-  "мясо": ["🍖","🥩"],
-  "футбол": ["⚽"],
-  "баскетбол": ["🏀"],
-  "теннис": ["🎾"],
-  "спорт": ["⚽","🏀","🏈","🎾"],
-  "машина": ["🚗","🚙"],
-  "автомобиль": ["🚗"],
-  "самолет": ["✈️"],
-  "поезд": ["🚆","🚂"],
-  "корабль": ["🚢","⛵"],
-  "велосипед": ["🚲"],
-  "ракета": ["🚀"],
-  "телефон": ["📱","☎️"],
-  "компьютер": ["💻"],
-  "часы": ["⌚","⏰","🕰️"],
-  "деньги": ["💰","💵","💸"],
-  "подарок": ["🎁"],
-  "праздник": ["🎉","🎊","🥳"],
-  "торжество": ["🎉"],
-  "музыка": ["🎵","🎶","🎧"],
-  "игра": ["🎮","🎲"],
-  "книга": ["📖","📚"],
-  "работа": ["💼"],
-  "дом": ["🏠","🏡"],
-  "город": ["🏙️"],
-  "флаг": ["🏁","🚩"],
-  "украина": ["🇺🇦"],
-  "россия": ["🇷🇺"],
-  "плачу": ["😢","😭"],
-  "смеюсь": ["😂","🤣"],
-  "устал": ["😴","🥱"],
-  "болею": ["🤒","🤢"],
-  "холодно": ["🥶"],
-  "жарко": ["🥵"],
-  "думаю": ["🤔"],
-  "молчу": ["🤐","🤫"],
-  "привет": ["👋"],
-  "пока": ["👋"],
-  "спасибо": ["🙏"],
-  "да": ["👍","✅"],
-  "нет": ["👎","❌"],
-  "палец": ["👍","👎","☝️"],
-  "рука": ["✋","🤚"],
-  "рукопожатие": ["🤝"],
-  "аплодисменты": ["👏"],
-  "поцелуй": ["😘","💋"],
-  "объятия": ["🤗"],
-  "танец": ["💃","🕺"],
-  "ангел": ["😇","👼"],
-  "дьявол": ["😈","👿"],
-  "череп": ["💀","☠️"],
-  "призрак": ["👻"],
-  "робот": ["🤖"],
-  "пришелец": ["👽"],
-  "клоун": ["🤡"],
-  "корона": ["👑"],
-  "алмаз": ["💎"],
-  "ключ": ["🔑"],
-  "замок": ["🔒","🔓"],
-  "лампа": ["💡"],
-  "бомба": ["💣"],
-  "нож": ["🔪"],
-  "пистолет": ["🔫"],
-  "аптечка": ["🩹","💊"],
-  "больница": ["🏥"],
-  "школа": ["🏫"],
-  "офис": ["🏢"],
-};
-
-let activeCategory = 'smileys';
-
-function initEmojiPickerUI() {
-  renderEmojiTabs();
-  renderEmojiGrid();
-}
-
-function renderEmojiTabs() {
-  const tabs = document.getElementById('emoji-tabs');
-  tabs.innerHTML = TELEGRAM_EMOJI_CATEGORIES.map(cat => `
-    <button class="emoji-tab-btn ${cat.id === activeCategory ? 'active' : ''}" onclick="switchEmojiCategory('${cat.id}', this)" title="${cat.name}">
-      <img class="apple-tab-img" src="${getAppleEmojiUrl(cat.icon)}" alt="${cat.name}">
-    </button>
-  `).join('');
-}
-
-function switchEmojiCategory(catId, btnEl) {
-  activeCategory = catId;
-  document.querySelectorAll('.emoji-tab-btn').forEach(btn => btn.classList.remove('active'));
-  if (btnEl) btnEl.classList.add('active');
-  document.getElementById('emoji-search-input').value = '';
-  renderEmojiGrid();
-}
-
-// Поиск эмодзи: поддерживает русские ключевые слова (частичное совпадение) и сам символ эмодзи
-function filterEmojiBySearch() {
-  const query = document.getElementById('emoji-search-input').value.trim().toLowerCase();
-  if (!query) return renderEmojiGrid();
-
-  let matchedSet = new Set();
-
-  // 1. Поиск по русским ключевым словам (по вхождению подстроки в ключ)
-  Object.keys(RU_EMOJI_KEYWORDS).forEach(keyword => {
-    if (keyword.includes(query) || query.includes(keyword)) {
-      RU_EMOJI_KEYWORDS[keyword].forEach(e => matchedSet.add(e));
-    }
-  });
-
-  // 2. Прямой поиск по символу эмодзи (если ввели сам эмодзи)
-  Object.keys(LOCAL_EMOJI_DATABASE).forEach(catKey => {
-    LOCAL_EMOJI_DATABASE[catKey].forEach(char => {
-      if (char === query) matchedSet.add(char);
-    });
-  });
-
-  renderEmojiGrid(Array.from(matchedSet));
-}
-
-function renderEmojiGrid(customList = null) {
-  const grid = document.getElementById('emoji-grid');
-  let listToRender = customList;
-
-  if (!listToRender) {
-    if (activeCategory === 'recent') {
-      listToRender = recentEmojisList;
-    } else {
-      listToRender = LOCAL_EMOJI_DATABASE[activeCategory] || [];
-    }
-  }
-
-  if (listToRender.length === 0) {
-    grid.innerHTML = `<div style="grid-column: span 8; color:#7F91A4; font-size:12px; margin-top:20px; text-align:center;">Ничего не найдено</div>`;
-    return;
-  }
-
-  grid.innerHTML = listToRender.map(char => `
-    <div class="emoji-item" onclick="insertEmoji('${char}')">
-      <img class="apple-emoji-img" src="${getAppleEmojiUrl(char)}" alt="${char}" loading="lazy">
-    </div>
-  `).join('');
-}
-
-function toggleEmojiPicker() {
-  const picker = document.getElementById('emoji-picker');
-  const isVisible = picker.style.display === 'flex';
-  if (isVisible) {
-    closeEmojiPickerUI();
-  } else {
-    picker.style.display = 'flex';
-    initEmojiPickerUI();
-    if (!isEmojiPickerPushed) {
-      history.pushState({ emojiOpen: true }, '', '#emoji');
-      isEmojiPickerPushed = true;
-    }
-  }
-}
-
-function closeEmojiPickerUI() {
-  document.getElementById('emoji-picker').style.display = 'none';
-  if (isEmojiPickerPushed) isEmojiPickerPushed = false;
-}
-
-function insertEmoji(emojiChar) {
-  const input = document.getElementById('reply-input');
-  input.value += emojiChar;
-  input.focus();
-  updateSendButtonUI();
-
-  recentEmojisList = [emojiChar, ...recentEmojisList.filter(c => c !== emojiChar)].slice(0, 32);
-  localStorage.setItem('recent_apple_emojis', JSON.stringify(recentEmojisList));
-}
-/* ==================== ФАЙЛЫ TELEGRAM: getFile КЭШ ==================== */
-const fileUrlCache = {};
-
-async function getTelegramFileUrl(fileId) {
-  if (!fileId) return null;
-  if (fileUrlCache[fileId]) return fileUrlCache[fileId];
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${activeBotToken}/getFile?file_id=${fileId}`);
-    const data = await res.json();
-    if (data.ok) {
-      const url = `https://api.telegram.org/file/bot${activeBotToken}/${data.result.file_path}`;
-      fileUrlCache[fileId] = url;
-      return url;
-    }
-  } catch (e) {}
-  return null;
-}
-
-function formatFileSize(bytes) {
-  if (!bytes) return '';
-  if (bytes < 1024) return bytes + ' Б';
-  if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' КБ';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' МБ';
-}
-
-function formatDuration(sec) {
-  sec = Math.round(sec || 0);
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}:${String(s).padStart(2, '0')}`;
-}
-
-/* ==================== АВАТАРЫ (В ВЫСОКОМ КАЧЕСТВЕ) ==================== */
-async function fetchUserAvatar(userId) {
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${activeBotToken}/getUserProfilePhotos?user_id=${userId}&limit=1`);
-    const data = await res.json();
-    if (data.ok && data.result.photos.length > 0) {
-      // Берём последний (самый крупный по разрешению) элемент массива размеров первого фото
-      const sizes = data.result.photos[0];
-      const largest = sizes[sizes.length - 1];
-      const url = await getTelegramFileUrl(largest.file_id);
-      if (url) return url;
-    }
-  } catch (e) {}
-  return null;
-}
-
-function openAvatarLightbox(url) {
-  if (!url) return;
-  const holder = document.getElementById('lightbox-media-holder');
-  holder.innerHTML = `<img src="${url}">`;
-  document.getElementById('lightbox-download').href = url;
-  document.getElementById('lightbox-overlay').style.display = 'flex';
-}
-
-function openAvatarLightboxFromModal() {
-  const box = document.getElementById('modal-avatar-box');
-  const img = box.querySelector('img');
-  if (img) openAvatarLightbox(img.src);
-}
-
-function closeLightbox(e) {
-  if (e) e.stopPropagation();
-  document.getElementById('lightbox-overlay').style.display = 'none';
-  document.getElementById('lightbox-media-holder').innerHTML = '';
-}
-
-function openMediaLightbox(url, isVideo) {
-  if (!url) return;
-  const holder = document.getElementById('lightbox-media-holder');
-  holder.innerHTML = isVideo
-    ? `<video src="${url}" controls autoplay playsinline></video>`
-    : `<img src="${url}">`;
-  document.getElementById('lightbox-download').href = url;
-  document.getElementById('lightbox-overlay').style.display = 'flex';
-}
-
-/* ==================== РЕНДЕР МЕДИА-ВЛОЖЕНИЙ В ПУЗЫРЕ СООБЩЕНИЯ ==================== */
-// Возвращает { bubbleExtraClass, html } — html вставляется в пузырь до подписи/текста
-function renderMediaBlockPlaceholder(m) {
-  if (!m.media) return { extraClass: '', html: '' };
-  const mid = m.id;
-  const holderId = `media-holder-${mid}`;
-  // Асинхронная подгрузка реального URL произойдёт после рендера через hydrateMediaElement()
-  switch (m.media.type) {
-    case 'photo':
-      return { extraClass: 'media-only', html: `<div id="${holderId}" data-media-id="${mid}" class="media-loading" style="width:220px;height:160px;background:#0B1118;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#7F91A4;font-size:12px;">Фото…</div>` };
-    case 'video':
-      return { extraClass: 'media-only', html: `<div id="${holderId}" data-media-id="${mid}" class="media-loading" style="width:220px;height:160px;background:#0B1118;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#7F91A4;font-size:12px;">Видео…</div>` };
-    case 'animation':
-      return { extraClass: 'media-only', html: `<div id="${holderId}" data-media-id="${mid}" class="media-loading" style="width:220px;height:160px;background:#0B1118;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#7F91A4;font-size:12px;">GIF…</div>` };
-    case 'sticker':
-      return { extraClass: 'sticker-bubble', html: `<div id="${holderId}" data-media-id="${mid}" style="width:140px;height:140px;"></div>` };
-    case 'voice':
-      return { extraClass: '', html: `<div id="${holderId}" data-media-id="${mid}" class="voice-msg"><button class="voice-play-btn" onclick="toggleVoicePlay('${mid}')">▶️</button><div class="voice-wave-wrap"><canvas class="voice-wave-canvas" id="wave-${mid}"></canvas><div class="voice-time-row"><span class="voice-time" id="voice-time-${mid}">${formatDuration(m.media.duration)}</span><button class="voice-speed-btn" onclick="cycleVoiceSpeed('${mid}', event)">1x</button></div></div><audio id="audio-${mid}" preload="none"></audio></div>` };
-    case 'video_note':
-      return { extraClass: 'media-only', html: `<div id="${holderId}" data-media-id="${mid}" class="videonote-player" onclick="playInlineVideoNote('${mid}')" style="display:flex;align-items:center;justify-content:center;color:#7F91A4;font-size:12px;">Видеосообщение…</div>` };
-    case 'document':
-      return { extraClass: '', html: `<div id="${holderId}" data-media-id="${mid}" class="media-document"><div class="doc-icon">📄</div><div class="doc-info"><div class="doc-name">${escapeHtml(m.media.fileName || 'Файл')}</div><div class="doc-size">${formatFileSize(m.media.fileSize)}</div></div></div>` };
-    case 'audio':
-      return { extraClass: '', html: `<div id="${holderId}" data-media-id="${mid}" class="audio-msg"><div class="audio-icon">🎵</div><div><div class="audio-title">${escapeHtml(m.media.title || m.media.fileName || 'Аудио')}</div><div class="audio-performer">${escapeHtml(m.media.performer || '')} · ${formatDuration(m.media.duration)}</div></div><audio id="audio-${mid}" controls preload="none" style="height:32px; max-width:170px;"></audio></div>` };
-    default:
-      return { extraClass: '', html: '' };
-  }
-}
-
-// Вызывается после вставки innerHTML — подгружает реальные file URL и заполняет плейсхолдеры
-async function hydrateMediaElements(chatId) {
-  const chat = db[activeBotToken][chatId];
-  if (!chat) return;
-  for (const m of chat.messages) {
-    if (!m.media) continue;
-    const holder = document.getElementById(`media-holder-${m.id}`);
-    if (!holder) continue;
-    hydrateOneMedia(m, holder); // не await — параллельная подгрузка
-  }
-}
-
-async function hydrateOneMedia(m, holder) {
-  const media = m.media;
-  try {
-    if (media.type === 'photo' || media.type === 'video' || media.type === 'animation' || media.type === 'sticker' || media.type === 'video_note') {
-      const url = await getTelegramFileUrl(media.fileId);
-      if (!url) { holder.innerText = 'Не удалось загрузить'; return; }
-      if (media.type === 'photo') {
-        holder.outerHTML = `<img class="media-photo" id="${holder.id}" src="${url}" onclick="openMediaLightbox('${url}', false)" loading="lazy">`;
-      } else if (media.type === 'sticker') {
-        holder.outerHTML = `<img class="media-sticker-img" id="${holder.id}" src="${url}" loading="lazy">`;
-      } else if (media.type === 'video_note') {
-        holder.classList.remove('media-loading');
-        holder.innerHTML = `<video src="${url}" muted playsinline preload="metadata"></video>`;
-        holder.dataset.videoUrl = url;
-      } else {
-        // video / animation
-        holder.outerHTML = `<video class="media-video-el" id="${holder.id}" src="${url}" controls ${media.type === 'animation' ? 'autoplay loop muted' : ''} playsinline preload="metadata" onclick="event.stopPropagation()"></video>`;
-      }
-    } else if (media.type === 'voice') {
-      const url = await getTelegramFileUrl(media.fileId);
-      const audioEl = document.getElementById(`audio-${m.id}`);
-      if (audioEl && url) audioEl.src = url;
-      drawStaticWaveform(document.getElementById(`wave-${m.id}`), media.durationSeed || m.id);
-    } else if (media.type === 'audio') {
-      const url = await getTelegramFileUrl(media.fileId);
-      const audioEl = document.getElementById(`audio-${m.id}`);
-      if (audioEl && url) audioEl.src = url;
-    } else if (media.type === 'document') {
-      const url = await getTelegramFileUrl(media.fileId);
-      if (url) holder.onclick = () => window.open(url, '_blank');
-    }
-  } catch (e) {}
-}
-
-function playInlineVideoNote(mid) {
-  const holder = document.getElementById(`media-holder-${mid}`);
-  if (!holder) return;
-  const video = holder.querySelector('video');
-  if (!video) return;
-  if (video.paused) { video.play(); video.setAttribute('controls', ''); }
-  else video.pause();
-}
-
-/* Простая статичная "форма волны" для голосовых (визуальный waveform без реального анализа PCM) */
-function drawStaticWaveform(canvas, seed) {
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width = canvas.clientWidth || 160;
-  const h = canvas.height = 24;
-  ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = 'rgba(255,255,255,0.55)';
-  const bars = 40;
-  const barW = w / bars;
-  let seedNum = typeof seed === 'number' ? seed : String(seed).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-  for (let i = 0; i < bars; i++) {
-    seedNum = (seedNum * 9301 + 49297) % 233280;
-    const rnd = seedNum / 233280;
-    const barH = Math.max(2, rnd * h);
-    ctx.fillRect(i * barW, (h - barH) / 2, barW - 1.5, barH);
-  }
-}
-
-let currentPlayingVoiceId = null;
-function toggleVoicePlay(mid) {
-  const audio = document.getElementById(`audio-${mid}`);
-  const btn = document.querySelector(`#media-holder-${mid} .voice-play-btn`);
-  if (!audio) return;
-  if (currentPlayingVoiceId && currentPlayingVoiceId !== mid) {
-    const prevAudio = document.getElementById(`audio-${currentPlayingVoiceId}`);
-    if (prevAudio) prevAudio.pause();
-    const prevBtn = document.querySelector(`#media-holder-${currentPlayingVoiceId} .voice-play-btn`);
-    if (prevBtn) prevBtn.innerText = '▶️';
-  }
-  if (audio.paused) {
-    audio.play().catch(() => {});
-    if (btn) btn.innerText = '⏸️';
-    currentPlayingVoiceId = mid;
-    audio.ontimeupdate = () => {
-      const timeEl = document.getElementById(`voice-time-${mid}`);
-      if (timeEl) timeEl.innerText = formatDuration(audio.duration - audio.currentTime || 0);
-    };
-    audio.onended = () => { if (btn) btn.innerText = '▶️'; };
-  } else {
-    audio.pause();
-    if (btn) btn.innerText = '▶️';
-  }
-}
-
-const VOICE_SPEEDS = [1, 1.5, 2];
-function cycleVoiceSpeed(mid, evt) {
-  if (evt) evt.stopPropagation();
-  const audio = document.getElementById(`audio-${mid}`);
-  const btn = evt ? evt.target : null;
-  if (!audio) return;
-  const cur = audio.playbackRate || 1;
-  let idx = VOICE_SPEEDS.indexOf(cur);
-  idx = (idx + 1) % VOICE_SPEEDS.length;
-  audio.playbackRate = VOICE_SPEEDS[idx];
-  if (btn) btn.innerText = VOICE_SPEEDS[idx] + 'x';
-}
-/* ==================== ОТПРАВКА КНОПКИ (МИКРОФОН/ПЛЕЙН) ==================== */
-function updateSendButtonUI() {
-  const input = document.getElementById('reply-input');
-  const hasText = input.value.trim().length > 0;
-  document.getElementById('send-plane-btn').style.display = hasText ? 'flex' : 'none';
-  document.getElementById('media-record-btn').style.display = hasText ? 'none' : 'flex';
-  document.getElementById('videonote-btn').style.display = hasText ? 'none' : 'flex';
-  document.getElementById('attach-btn').style.display = hasText ? 'none' : 'flex';
-}
-
-/* ==================== ЗАПИСЬ ГОЛОСОВЫХ СООБЩЕНИЙ ==================== */
-let voiceRecorder = null;
-let voiceChunks = [];
-let voiceStream = null;
-let voiceRecordStartTs = 0;
-let voiceRecordTimerInt = null;
-let voiceAnalyser = null;
-let voiceAudioCtx = null;
-let voiceRafId = null;
-let isVoiceRecording = false;
-
-async function handleRecordClick() {
-  if (!currentChatId) return;
-  if (isVoiceRecording) { await finishVoiceRecording(true); return; }
-
-  try {
-    voiceStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  } catch (e) {
-    alert('Нет доступа к микрофону');
-    return;
-  }
-
-  const mimeType = MediaRecorder.isTypeSupported('audio/ogg;codecs=opus') ? 'audio/ogg;codecs=opus' : 'audio/webm;codecs=opus';
-  voiceRecorder = new MediaRecorder(voiceStream, { mimeType });
-  voiceChunks = [];
-  voiceRecorder.ondataavailable = (e) => { if (e.data.size > 0) voiceChunks.push(e.data); };
-  voiceRecorder.start();
-  isVoiceRecording = true;
-  voiceRecordStartTs = Date.now();
-
-  document.getElementById('main-input-bar').querySelectorAll('input, #attach-btn, #videonote-btn').forEach(el => el.style.visibility = 'hidden');
-  document.getElementById('media-record-btn').style.color = '#e53935';
-  document.getElementById('rec-overlay').style.display = 'flex';
-
-  voiceRecordTimerInt = setInterval(() => {
-    const sec = Math.floor((Date.now() - voiceRecordStartTs) / 1000);
-    document.getElementById('rec-timer').innerText = formatDuration(sec);
-  }, 200);
-
-  setupLiveWaveform(voiceStream);
-}
-
-function setupLiveWaveform(stream) {
-  try {
-    voiceAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const source = voiceAudioCtx.createMediaStreamSource(stream);
-    voiceAnalyser = voiceAudioCtx.createAnalyser();
-    voiceAnalyser.fftSize = 64;
-    source.connect(voiceAnalyser);
-    const canvas = document.getElementById('rec-live-wave');
-    const ctx = canvas.getContext('2d');
-    const dataArr = new Uint8Array(voiceAnalyser.frequencyBinCount);
-
-    function draw() {
-      if (!isVoiceRecording) return;
-      voiceRafId = requestAnimationFrame(draw);
-      voiceAnalyser.getByteFrequencyData(dataArr);
-      const w = canvas.width = canvas.clientWidth || 100;
-      const h = canvas.height = 28;
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = '#e53935';
-      const barW = w / dataArr.length;
-      for (let i = 0; i < dataArr.length; i++) {
-        const barH = Math.max(2, (dataArr[i] / 255) * h);
-        ctx.fillRect(i * barW, (h - barH) / 2, barW - 1, barH);
-      }
-    }
-    draw();
-  } catch (e) {}
-}
-
-function cancelVoiceRecording() { finishVoiceRecording(false); }
-
-async function finishVoiceRecording(shouldSend) {
-  if (!isVoiceRecording || !voiceRecorder) return;
-  isVoiceRecording = false;
-  clearInterval(voiceRecordTimerInt);
-  if (voiceRafId) cancelAnimationFrame(voiceRafId);
-  if (voiceAudioCtx) { try { voiceAudioCtx.close(); } catch(e){} }
-
-  const durationSec = Math.floor((Date.now() - voiceRecordStartTs) / 1000);
-
-  const stopped = new Promise(resolve => { voiceRecorder.onstop = resolve; });
-  voiceRecorder.stop();
-  await stopped;
-  voiceStream.getTracks().forEach(t => t.stop());
-
-  document.getElementById('main-input-bar').querySelectorAll('input, #attach-btn, #videonote-btn').forEach(el => el.style.visibility = 'visible');
-  document.getElementById('media-record-btn').style.color = '#7F91A4';
-  document.getElementById('rec-overlay').style.display = 'none';
-
-  if (shouldSend && voiceChunks.length > 0 && durationSec >= 1) {
-    const blob = new Blob(voiceChunks, { type: voiceRecorder.mimeType });
-    await sendVoiceMessage(blob, durationSec);
-  }
-  voiceChunks = [];
-}
-
-async function sendVoiceMessage(blob, durationSec) {
-  if (!currentChatId) return;
-  const form = new FormData();
-  form.append('chat_id', currentChatId);
-  form.append('voice', blob, 'voice.ogg');
-  form.append('duration', durationSec);
-  if (selectedReplyMsgId) form.append('reply_to_message_id', selectedReplyMsgId);
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${activeBotToken}/sendVoice`, { method: 'POST', body: form });
-    const data = await res.json();
-    if (data.ok) {
-      appendOutgoingMediaMessage(data.result, { type: 'voice', duration: durationSec, fileId: data.result.voice ? data.result.voice.file_id : null });
-    } else {
-      alert('Ошибка отправки голосового: ' + (data.description || ''));
-    }
-  } catch (e) { alert('Ошибка сети при отправке голосового'); }
-  cancelReplyQuote();
-}
-
-/* ==================== ЗАПИСЬ ВИДЕОКРУЖКОВ (VIDEO NOTE) ==================== */
-let vnStream = null;
-let vnRecorder = null;
-let vnChunks = [];
-let vnRecording = false;
-
-async function openVideoNoteRecorder() {
-  if (!currentChatId) return;
-  try {
-    vnStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 480, height: 480 }, audio: true });
-  } catch (e) {
-    alert('Нет доступа к камере');
-    return;
-  }
-  const preview = document.getElementById('videonote-preview');
-  preview.srcObject = vnStream;
-  document.getElementById('videonote-overlay').style.display = 'flex';
-  document.getElementById('vn-record-btn').style.display = 'flex';
-  document.getElementById('vn-send-btn').style.display = 'none';
-  vnChunks = [];
-  vnRecording = false;
-
-  if (!isVideoNoteOverlayPushed) {
-    history.pushState({ vnOpen: true }, '', '#videonote');
-    isVideoNoteOverlayPushed = true;
-  }
-}
-
-function closeVideoNoteRecorder() {
-  if (vnStream) { vnStream.getTracks().forEach(t => t.stop()); vnStream = null; }
-  if (vnRecorder && vnRecorder.state !== 'inactive') { try { vnRecorder.stop(); } catch(e){} }
-  vnRecording = false;
-  document.getElementById('videonote-overlay').style.display = 'none';
-  document.getElementById('videonote-preview').srcObject = null;
-  if (isVideoNoteOverlayPushed) { isVideoNoteOverlayPushed = false; if (location.hash === '#videonote') history.back(); }
-}
-
-function toggleVideoNoteRecording() {
-  if (!vnRecording) {
-    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus' : 'video/webm';
-    vnRecorder = new MediaRecorder(vnStream, { mimeType });
-    vnChunks = [];
-    vnRecorder.ondataavailable = (e) => { if (e.data.size > 0) vnChunks.push(e.data); };
-    vnRecorder.start();
-    vnRecording = true;
-    document.getElementById('vn-record-btn').innerText = '⏹';
-    document.getElementById('vn-record-btn').title = 'Остановить';
-  } else {
-    vnRecorder.stop();
-    vnRecording = false;
-    document.getElementById('vn-record-btn').style.display = 'none';
-    document.getElementById('vn-send-btn').style.display = 'flex';
-  }
-}
-
-async function sendVideoNoteRecording() {
-  if (!vnChunks.length) { closeVideoNoteRecorder(); return; }
-  const blob = new Blob(vnChunks, { type: vnRecorder.mimeType || 'video/webm' });
-  closeVideoNoteRecorder();
-  if (!currentChatId) return;
-
-  const form = new FormData();
-  form.append('chat_id', currentChatId);
-  form.append('video_note', blob, 'note.webm');
-  form.append('length', 480);
-  if (selectedReplyMsgId) form.append('reply_to_message_id', selectedReplyMsgId);
-
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${activeBotToken}/sendVideoNote`, { method: 'POST', body: form });
-    const data = await res.json();
-    if (data.ok) {
-      appendOutgoingMediaMessage(data.result, { type: 'video_note', fileId: data.result.video_note ? data.result.video_note.file_id : null });
-    } else {
-      alert('Ошибка отправки видеосообщения: ' + (data.description || 'Возможно, сервер Telegram не принял формат видео.'));
-    }
-  } catch (e) { alert('Ошибка сети при отправке видеосообщения'); }
-  cancelReplyQuote();
-}
-
-/* ==================== ОТПРАВКА ФАЙЛОВ (ФОТО/ВИДЕО/ДОКУМЕНТ/АУДИО) ==================== */
-function handleFileSend(e) {
-  const file = e.target.files[0];
-  e.target.value = '';
-  if (file && currentChatId) sendGenericFile(file);
-}
-
-async function sendGenericFile(file) {
-  const isImage = file.type.startsWith('image/') && file.type !== 'image/gif';
-  const isGif = file.type === 'image/gif';
-  const isVideo = file.type.startsWith('video/');
-  const isAudio = file.type.startsWith('audio/');
-
-  let endpoint = 'sendDocument';
-  let field = 'document';
-  let mediaType = 'document';
-
-  if (isImage) { endpoint = 'sendPhoto'; field = 'photo'; mediaType = 'photo'; }
-  else if (isGif) { endpoint = 'sendAnimation'; field = 'animation'; mediaType = 'animation'; }
-  else if (isVideo) { endpoint = 'sendVideo'; field = 'video'; mediaType = 'video'; }
-  else if (isAudio) { endpoint = 'sendAudio'; field = 'audio'; mediaType = 'audio'; }
-
-  const form = new FormData();
-  form.append('chat_id', currentChatId);
-  form.append(field, file, file.name);
-  const captionInput = document.getElementById('reply-input');
-  const caption = captionInput.value.trim();
-  if (caption) form.append('caption', caption);
-  if (selectedReplyMsgId) form.append('reply_to_message_id', selectedReplyMsgId);
-
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${activeBotToken}/${endpoint}`, { method: 'POST', body: form });
-    const data = await res.json();
-    if (data.ok) {
-      const r = data.result;
-      let fileId = null, fileName = file.name, fileSize = file.size;
-      if (mediaType === 'photo' && r.photo) fileId = r.photo[r.photo.length - 1].file_id;
-      else if (mediaType === 'animation' && r.animation) fileId = r.animation.file_id;
-      else if (mediaType === 'video' && r.video) fileId = r.video.file_id;
-      else if (mediaType === 'audio' && r.audio) fileId = r.audio.file_id;
-      else if (r.document) fileId = r.document.file_id;
-
-      appendOutgoingMediaMessage(r, { type: mediaType, fileId, fileName, fileSize, caption: caption || null });
-      captionInput.value = '';
-      updateSendButtonUI();
-    } else {
-      alert('Ошибка отправки файла: ' + (data.description || ''));
-    }
-  } catch (e) { alert('Ошибка сети при отправке файла'); }
-  cancelReplyQuote();
-}
-
-// Добавляет исходящее сообщение с медиа в локальную БД и рендерит его
-function appendOutgoingMediaMessage(apiResult, media) {
-  const chat = db[activeBotToken][currentChatId];
-  if (!chat) return;
-  const d = new Date();
-  chat.messages.push({
-    id: apiResult.message_id,
-    type: 'out',
-    text: media.caption || '',
-    media: media,
-    read: false,
-    reaction: null,
-    dateStr: formatDateDivider(d),
-    time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  });
-  saveDB();
-  renderMessagesInRoom(currentChatId);
-}
-/* ==================== ПОИСК И ДРАВЕР ==================== */
-function toggleSearchBar() {
-  const container = document.getElementById('search-bar-container');
-  container.style.display = container.style.display === 'block' ? 'none' : 'block';
-  if (container.style.display === 'block') document.getElementById('search-input').focus();
-}
-
-function toggleDrawer() {
-  const drawer = document.getElementById('drawer-menu');
-  const overlay = document.getElementById('drawer-overlay');
-  const isOpen = drawer.classList.contains('open');
-  if (isOpen) {
-    drawer.classList.remove('open');
-    overlay.classList.remove('active');
-  } else {
-    updateDrawerHeaderUI();
-    drawer.classList.add('open');
-    overlay.classList.add('active');
-  }
-}
-
-function toggleAccountsDropdown() {
-  const list = document.getElementById('drawer-accounts-list');
-  const arrow = document.getElementById('drawer-arrow');
-  if (list.style.display === 'block') {
-    list.style.display = 'none';
-    arrow.innerText = '▼';
-  } else {
-    renderAccountsDropdownList();
-    list.style.display = 'block';
-    arrow.innerText = '▲';
-  }
-}
-
-function updateDrawerHeaderUI() {
-  const currentBot = bots.find(b => b.token === activeBotToken) || { name: 'Админ аккаунт', avatar: null };
-  document.getElementById('drawer-bot-name').innerText = currentBot.name;
-  const avatarBox = document.getElementById('drawer-bot-avatar');
-  avatarBox.innerHTML = currentBot.avatar ? `<img src="${currentBot.avatar}">` : currentBot.name.charAt(0).toUpperCase();
-}
-
-function renderAccountsDropdownList() {
-  const list = document.getElementById('drawer-accounts-list');
-  list.innerHTML = bots.map(b => `
-    <div class="drawer-item" onclick="switchBotFromDrawer('${b.token}')">
-      <div class="mini-avatar">${b.avatar ? `<img src="${b.avatar}">` : b.name.charAt(0).toUpperCase()}</div>
-      <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(b.name)}</span>
-      ${b.token === activeBotToken ? '<span class="active-check">✓</span>' : ''}
-    </div>
-  `).join('');
-}
-
-function switchBotFromDrawer(token) {
-  activeBotToken = token;
-  localStorage.setItem('app_active_token', token);
-  toggleDrawer();
-  showDialogsScreen();
-}
-
-function openAddBotModal() { toggleDrawer(); document.getElementById('add-account-modal').style.display = 'flex'; }
-function closeAddBotModal() { document.getElementById('add-account-modal').style.display = 'none'; }
-
-function addBotFromDrawer() {
-  const token = document.getElementById('drawer-token-input').value.trim();
-  const name = document.getElementById('drawer-name-input').value.trim() || 'Бот ' + (bots.length + 1);
-  if (!token) return alert('Введите токен');
-  bots.push({ name, token });
-  localStorage.setItem('app_bots', JSON.stringify(bots));
-  activeBotToken = token;
-  localStorage.setItem('app_active_token', token);
-  closeAddBotModal();
-  showDialogsScreen();
-}
-
-function openMyProfileFromDrawer() {
-  toggleDrawer();
-  const currentBot = bots.find(b => b.token === activeBotToken) || { name: 'Мой Профиль' };
-  const avatarBox = document.getElementById('modal-avatar-box');
-  avatarBox.innerHTML = currentBot.avatar ? `<img src="${currentBot.avatar}">` : currentBot.name.charAt(0).toUpperCase();
-  document.getElementById('modal-name').innerText = currentBot.name;
-  document.getElementById('modal-username').innerText = 'Бот Аккаунт';
-  document.getElementById('modal-id-val').innerText = activeBotToken.slice(0, 10) + '...';
-  document.getElementById('my-profile-tools').style.display = 'flex';
-  document.getElementById('profile-modal').style.display = 'flex';
-}
-
-function openBackupModal() { document.getElementById('backup-modal').style.display = 'flex'; }
-function closeBackupModal() { document.getElementById('backup-modal').style.display = 'none'; }
-
-function exportBackup() {
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
-  const downloadAnchor = document.createElement('a');
-  downloadAnchor.setAttribute("href", dataStr);
-  downloadAnchor.setAttribute("download", `chats_backup_${new Date().toISOString().slice(0,10)}.json`);
-  document.body.appendChild(downloadAnchor);
-  downloadAnchor.click();
-  downloadAnchor.remove();
-}
-
-function importBackup(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      db = JSON.parse(e.target.result);
-      saveDB();
-      alert('База импортирована!');
-      closeBackupModal();
-      renderDialogsList();
-    } catch(err) { alert('Ошибка файла'); }
-  };
-  reader.readAsText(file);
-}
-
-/* ==================== СИСТЕМНАЯ КНОПКА «НАЗАД» ==================== */
-window.addEventListener('popstate', () => {
-  if (document.getElementById('videonote-overlay').style.display === 'flex') {
-    closeVideoNoteRecorder();
-    return;
-  }
-  if (document.getElementById('emoji-picker').style.display === 'flex') {
-    closeEmojiPickerUI();
-    return;
-  }
-  if (document.getElementById('lightbox-overlay').style.display === 'flex') {
-    closeLightbox();
-    return;
-  }
-  if (currentChatId) closeChatRoomUI();
-});
-
-function triggerHardwareBack() { history.back(); }
-
-window.onload = () => {
-  updateAppHeight();
-  if (activeBotToken && bots.some(b => b.token === activeBotToken)) {
-    showDialogsScreen();
-  } else {
-    renderAuthBotsList();
-  }
-};
-
-function addBot() {
-  const token = document.getElementById('token-input').value.trim();
-  const name = document.getElementById('bot-name-input').value.trim() || 'Бот ' + (bots.length + 1);
-  if (!token) return alert('Введите токен');
-  bots.push({ name, token });
-  localStorage.setItem('app_bots', JSON.stringify(bots));
-  activeBotToken = token;
-  localStorage.setItem('app_active_token', token);
-  showDialogsScreen();
-}
-
-function selectBot(token) {
-  activeBotToken = token;
-  localStorage.setItem('app_active_token', token);
-  showDialogsScreen();
-}
-
-function renderAuthBotsList() {
-  const container = document.getElementById('saved-bots-list');
-  container.innerHTML = bots.map(b => `
-    <div class="bot-list-item">
-      <span><b>${escapeHtml(b.name)}</b></span>
-      <button class="btn-primary" style="width:auto; padding:6px 12px;" onclick="selectBot('${b.token}')">Войти</button>
-    </div>
-  `).join('');
-}
-
-function showDialogsScreen() {
-  document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('dialogs-screen').style.display = 'flex';
-  const currentBot = bots.find(b => b.token === activeBotToken);
-  document.getElementById('active-bot-title').innerText = currentBot ? currentBot.name : 'Чат Бот';
-  if (!db[activeBotToken]) db[activeBotToken] = {};
-  renderDialogsList();
-  startPolling();
-}
-
-function startPolling() {
-  clearInterval(pollInterval);
-  fetchUpdates();
-  pollInterval = setInterval(fetchUpdates, 3000);
-}
-
-async function fetchUpdates() {
-  if (!activeBotToken) return;
-  const lastUpdateId = localStorage.getItem(`last_upd_${activeBotToken}`) || 0;
-  const url = `https://api.telegram.org/bot${activeBotToken}/getUpdates?offset=${Number(lastUpdateId) + 1}`;
-
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data.ok && data.result.length > 0) {
-      for (const update of data.result) {
-        if (update.message) await saveIncomingMessage(update.message);
-        if (update.message_reaction) await handleIncomingReactionUpdate(update.message_reaction);
-        localStorage.setItem(`last_upd_${activeBotToken}`, update.update_id);
-      }
-      saveDB();
-      renderDialogsList();
-      if (currentChatId) renderMessagesInRoom(currentChatId);
-    }
-    document.getElementById('status-text').innerText = 'Онлайн';
-  } catch (e) {
-    document.getElementById('status-text').innerText = 'Ошибка сети';
-  }
-}
-
-async function handleIncomingReactionUpdate(reactionUpdate) {
-  const chatId = reactionUpdate.chat.id;
-  const botDb = db[activeBotToken];
-  if (!botDb[chatId]) return;
-  const msg = botDb[chatId].messages.find(m => m.id === reactionUpdate.message_id);
-  if (msg && reactionUpdate.new_reaction && reactionUpdate.new_reaction.length > 0) {
-    const r = reactionUpdate.new_reaction[0];
-    msg.reaction = r.emoji || null;
-  }
-}
-
-/* Определяет тип медиа и извлекает данные из объекта сообщения Telegram */
-function extractMediaFromTelegramMessage(msg) {
-  if (msg.photo && msg.photo.length) {
-    const largest = msg.photo[msg.photo.length - 1];
-    return { type: 'photo', fileId: largest.file_id, fileSize: largest.file_size };
-  }
-  if (msg.video) return { type: 'video', fileId: msg.video.file_id, fileSize: msg.video.file_size, duration: msg.video.duration };
-  if (msg.animation) return { type: 'animation', fileId: msg.animation.file_id, fileSize: msg.animation.file_size };
-  if (msg.voice) return { type: 'voice', fileId: msg.voice.file_id, duration: msg.voice.duration, durationSeed: msg.message_id };
-  if (msg.video_note) return { type: 'video_note', fileId: msg.video_note.file_id, duration: msg.video_note.duration };
-  if (msg.sticker) return { type: 'sticker', fileId: msg.sticker.file_id, isAnimated: !!(msg.sticker.is_animated || msg.sticker.is_video) };
-  if (msg.audio) return { type: 'audio', fileId: msg.audio.file_id, duration: msg.audio.duration, title: msg.audio.title, performer: msg.audio.performer, fileName: msg.audio.file_name };
-  if (msg.document) return { type: 'document', fileId: msg.document.file_id, fileName: msg.document.file_name, fileSize: msg.document.file_size };
-  return null;
-}
-
-function mediaPreviewLabel(media) {
-  const map = { photo: '📷 Фото', video: '📹 Видео', animation: '🎞️ GIF', voice: '🎤 Голосовое', video_note: '⭕ Видеосообщение', sticker: '🖼️ Стикер', audio: '🎵 Аудио', document: '📎 Файл' };
-  return map[media.type] || '📎 Вложение';
-}
-
-async function saveIncomingMessage(msg) {
-  const chatId = msg.chat.id;
-  const botDb = db[activeBotToken];
-  if (!botDb[chatId]) {
-    botDb[chatId] = {
-      user: {
-        id: chatId,
-        name: `${msg.from.first_name || ''} ${msg.from.last_name || ''}`.trim() || 'Пользователь',
-        username: msg.from.username ? `@${msg.from.username}` : 'без юзернейма',
-        avatar: null
-      },
-      muted: false,
-      unreadCount: 0,
-      messages: []
-    };
-  }
-
-  if (!botDb[chatId].user.avatar) botDb[chatId].user.avatar = await fetchUserAvatar(msg.from.id);
-
-  if (!botDb[chatId].messages.some(m => m.id === msg.message_id)) {
-    const d = new Date(msg.date * 1000);
-    const media = extractMediaFromTelegramMessage(msg);
-    botDb[chatId].messages.push({
-      id: msg.message_id,
-      type: 'in',
-      text: msg.text || msg.caption || '',
-      media: media,
-      forwardFrom: msg.forward_from ? msg.forward_from.first_name : (msg.forward_origin && msg.forward_origin.sender_user ? msg.forward_origin.sender_user.first_name : null),
-      replyToText: msg.reply_to_message ? (msg.reply_to_message.text || msg.reply_to_message.caption || (msg.reply_to_message.photo ? '📷 Фото' : '[Вложение]')) : null,
-      reaction: null,
-      read: true,
-      timestamp: d.getTime(),
-      dateStr: formatDateDivider(d),
-      time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    });
-    if (currentChatId !== String(chatId)) botDb[chatId].unreadCount = (botDb[chatId].unreadCount || 0) + 1;
-  }
-}
-
-function formatDateDivider(dateObj) {
-  const months = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
-  return `${dateObj.getDate()} ${months[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
-}
-
-function renderDialogsList() {
-  const container = document.getElementById('dialogs-container');
-  const searchQuery = (document.getElementById('search-input').value || '').toLowerCase();
-  const botDb = db[activeBotToken] || {};
-  let chatIds = Object.keys(botDb);
-
-  if (searchQuery) chatIds = chatIds.filter(id => botDb[id].user.name.toLowerCase().includes(searchQuery));
-  if (chatIds.length === 0) return container.innerHTML = `<div class="empty-state">Чатов не найдено</div>`;
-
-  container.innerHTML = chatIds.map(id => {
-    const chat = botDb[id];
-    const lastMsg = chat.messages[chat.messages.length - 1] || { text: 'Нет сообщений', time: '' };
-    const previewText = lastMsg.media ? mediaPreviewLabel(lastMsg.media) + (lastMsg.text ? ': ' + lastMsg.text : '') : (lastMsg.text || 'Нет сообщений');
-    const avatarHtml = chat.user.avatar ? `<img src="${chat.user.avatar}">` : chat.user.name.charAt(0).toUpperCase();
-
-    return `
-      <div class="chat-item" onclick="openChatRoom('${id}')">
-        <div class="avatar-box" onclick="event.stopPropagation(); openAvatarLightbox('${chat.user.avatar || ''}')">${avatarHtml}</div>
-        <div class="chat-info">
-          <div class="chat-name">
-            <span>${escapeHtml(chat.user.name)} ${chat.muted ? '🔕' : ''}</span>
-            <span class="chat-time">${lastMsg.time}</span>
-          </div>
-          <div class="chat-preview-row">
-            <div class="chat-preview">${escapeHtml(previewText)}</div>
-            ${chat.unreadCount > 0 ? `<div class="badge">${chat.unreadCount}</div>` : ''}
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function openChatRoom(chatId) {
-  currentChatId = String(chatId);
-  const chat = db[activeBotToken][chatId];
-  chat.unreadCount = 0;
-  saveDB();
-
-  const avatarBox = document.getElementById('room-header-avatar');
-  avatarBox.innerHTML = chat.user.avatar ? `<img src="${chat.user.avatar}">` : chat.user.name.charAt(0).toUpperCase();
-
-  document.getElementById('room-user-name').innerText = chat.user.name;
-  updateMuteButtonUI(chat.muted);
-  renderMessagesInRoom(chatId);
-  document.getElementById('chat-room').style.display = 'flex';
-  updateSendButtonUI();
-
-  if (!isHistoryPushed) {
-    history.pushState({ inChat: true }, '', '#chat');
-    isHistoryPushed = true;
-  }
-}
-
-function closeChatRoomUI() {
-  currentChatId = null;
-  isHistoryPushed = false;
-  document.getElementById('header-dropdown').style.display = 'none';
-  closeEmojiPickerUI();
-  cancelReplyQuote();
-  document.getElementById('chat-room').style.display = 'none';
-  renderDialogsList();
-}
-
-function renderMessagesInRoom(chatId) {
-  const container = document.getElementById('room-messages');
-  const chat = db[activeBotToken][chatId];
-  if (!chat) return;
-
-  let html = '';
-  let lastDateStr = '';
-
-  chat.messages.forEach(m => {
-    const msgDateStr = m.dateStr || 'Сегодня';
-    if (msgDateStr !== lastDateStr) {
-      html += `<div class="date-divider">${msgDateStr}</div>`;
-      lastDateStr = msgDateStr;
-    }
-
-    const isOut = m.type === 'out';
-    const ticks = isOut ? (m.read ? '✓✓' : '✓') : '';
-    const mediaBlock = renderMediaBlockPlaceholder(m);
-    const hasCaptionOrText = m.text && m.text.length > 0;
-
-    html += `
-      <div class="msg-wrapper ${isOut ? 'out-align' : ''}" data-id="${m.id}">
-        <div class="msg-bubble ${isOut ? 'msg-out' : 'msg-in'} ${mediaBlock.extraClass}">
-          ${m.forwardFrom ? `<div class="forward-quote">Переслано от ${escapeHtml(m.forwardFrom)}</div>` : ''}
-          ${m.replyToText ? `<div class="reply-quote">${escapeHtml(m.replyToText)}</div>` : ''}
-          ${mediaBlock.html}
-          ${hasCaptionOrText ? `<div class="${m.media ? 'msg-caption' : ''}">${renderTextWithEmoji(m.text)}</div>` : ''}
-          <div class="msg-meta">
-            <span>${m.time}</span>
-            ${isOut ? `<span class="ticks">${ticks}</span>` : ''}
-          </div>
-          ${m.reaction ? `<div class="msg-reactions-row"><span class="msg-reaction-chip"><img class="msg-emoji-img" style="width:14px;height:14px;" src="${getAppleEmojiUrl(m.reaction)}">1</span></div>` : ''}
-        </div>
-      </div>
-    `;
-  });
-
-  container.innerHTML = html;
-  container.scrollTop = container.scrollHeight;
-  attachMessageEvents();
-  hydrateMediaElements(chatId);
-}
-
-function attachMessageEvents() {
-  document.querySelectorAll('.msg-wrapper').forEach(el => {
-    let pressTimer;
-    const start = () => { pressTimer = setTimeout(() => openContextMenu(Number(el.getAttribute('data-id'))), 500); };
-    const cancel = () => clearTimeout(pressTimer);
-    el.addEventListener('mousedown', start);
-    el.addEventListener('mouseup', cancel);
-    el.addEventListener('mouseleave', cancel);
-    el.addEventListener('touchstart', start, { passive: true });
-    el.addEventListener('touchend', cancel);
-    el.addEventListener('touchmove', cancel);
-  });
-}
-
-function openContextMenu(msgId) { selectedContextMsgId = msgId; document.getElementById('context-menu-overlay').style.display = 'flex'; }
-function closeContextMenu() { document.getElementById('context-menu-overlay').style.display = 'none'; }
-
-/* ==================== РЕАКЦИИ (через Telegram Bot API setMessageReaction) ==================== */
-async function setReaction(emoji) {
-  const chat = db[activeBotToken][currentChatId];
-  const msg = chat.messages.find(m => m.id === selectedContextMsgId);
-  if (!msg) { closeContextMenu(); return; }
-
-  const newReaction = msg.reaction === emoji ? null : emoji;
-  msg.reaction = newReaction;
-  saveDB();
-  renderMessagesInRoom(currentChatId);
-  closeContextMenu();
-
-  try {
-    await fetch(`https://api.telegram.org/bot${activeBotToken}/setMessageReaction`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: currentChatId,
-        message_id: selectedContextMsgId,
-        reaction: newReaction ? [{ type: 'emoji', emoji: newReaction }] : []
-      })
-    });
-  } catch (e) { /* Реакция уже сохранена локально даже если API недоступен для этого чата */ }
-}
-
-function contextReply() {
-  const chat = db[activeBotToken][currentChatId];
-  const msg = chat.messages.find(m => m.id === selectedContextMsgId);
-  if (msg) setReplyQuote(msg.id, msg.text || (msg.media ? mediaPreviewLabel(msg.media) : ''));
-  closeContextMenu();
-}
-
-/* ==================== ПЕРЕСЫЛКА (FORWARD) ==================== */
-function contextForward() {
-  forwardSourceMsgId = selectedContextMsgId;
-  closeContextMenu();
-  const botDb = db[activeBotToken] || {};
-  const list = document.getElementById('forward-chat-list');
-  const chatIds = Object.keys(botDb).filter(id => id !== currentChatId);
-  if (chatIds.length === 0) {
-    list.innerHTML = `<div class="empty-state" style="margin-top:10px;">Нет других чатов для пересылки</div>`;
-  } else {
-    list.innerHTML = chatIds.map(id => {
-      const chat = botDb[id];
-      const avatarHtml = chat.user.avatar ? `<img src="${chat.user.avatar}">` : chat.user.name.charAt(0).toUpperCase();
-      return `
-        <div class="forward-chat-item" onclick="executeForward('${id}')">
-          <div class="avatar-box" style="margin-right:0;">${avatarHtml}</div>
-          <span>${escapeHtml(chat.user.name)}</span>
-        </div>
-      `;
-    }).join('');
-  }
-  document.getElementById('forward-modal').style.display = 'flex';
-}
-
-function closeForwardModal() { document.getElementById('forward-modal').style.display = 'none'; }
-
-async function executeForward(targetChatId) {
-  closeForwardModal();
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${activeBotToken}/forwardMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: targetChatId, from_chat_id: currentChatId, message_id: forwardSourceMsgId })
-    });
-    const data = await res.json();
-    if (data.ok) {
-      const srcMsg = db[activeBotToken][currentChatId].messages.find(m => m.id === forwardSourceMsgId);
-      const targetChat = db[activeBotToken][targetChatId];
-      const d = new Date();
-      targetChat.messages.push({
-        id: data.result.message_id,
-        type: 'out',
-        text: srcMsg ? srcMsg.text : '',
-        media: srcMsg ? srcMsg.media : null,
-        forwardFrom: 'вас',
-        read: false,
-        reaction: null,
-        dateStr: formatDateDivider(d),
-        time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      });
-      saveDB();
-      renderDialogsList();
-      alert('Сообщение переслано');
-    } else {
-      alert('Не удалось переслать: ' + (data.description || ''));
-    }
-  } catch (e) { alert('Ошибка сети при пересылке'); }
-}
-
-function openDeleteModal() { closeContextMenu(); document.getElementById('delete-modal').style.display = 'flex'; }
-function closeDeleteModal() { document.getElementById('delete-modal').style.display = 'none'; }
-
-async function executeDelete(forEveryone) {
-  const chat = db[activeBotToken][currentChatId];
-  if (forEveryone) {
-    try {
-      await fetch(`https://api.telegram.org/bot${activeBotToken}/deleteMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: currentChatId, message_id: selectedContextMsgId })
-      });
-    } catch(e) {}
-  }
-  chat.messages = chat.messages.filter(m => m.id !== selectedContextMsgId);
-  saveDB();
-  renderMessagesInRoom(currentChatId);
-  closeDeleteModal();
-}
-
-function setReplyQuote(msgId, text) {
-  selectedReplyMsgId = msgId;
-  document.getElementById('reply-preview-text').innerText = text;
-  document.getElementById('reply-preview-bar').style.display = 'flex';
-}
-function cancelReplyQuote() { selectedReplyMsgId = null; document.getElementById('reply-preview-bar').style.display = 'none'; }
-
-async function sendReply() {
-  const input = document.getElementById('reply-input');
-  const text = input.value.trim();
-  if (!text || !currentChatId) return;
-
-  const payload = { chat_id: currentChatId, text: text };
-  if (selectedReplyMsgId) payload.reply_to_message_id = selectedReplyMsgId;
-
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${activeBotToken}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (data.ok) {
-      const chat = db[activeBotToken][currentChatId];
-      const d = new Date();
-      chat.messages.push({
-        id: data.result.message_id,
-        type: 'out',
-        text: text,
-        read: false,
-        reaction: null,
-        dateStr: formatDateDivider(d),
-        time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      });
-      saveDB();
-      renderMessagesInRoom(currentChatId);
-      input.value = '';
-      updateSendButtonUI();
-      cancelReplyQuote();
-      closeEmojiPickerUI();
-    } else {
-      alert('Ошибка отправки: ' + (data.description || ''));
-    }
-  } catch (e) { alert('Ошибка сети при отправке сообщения'); }
-}
-
-function handleKeyPress(e) { if (e.key === 'Enter') sendReply(); }
-
-function toggleHeaderMenu() {
-  const menu = document.getElementById('header-dropdown');
-  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-}
-
-function toggleMuteChat() {
-  const chat = db[activeBotToken][currentChatId];
-  chat.muted = !chat.muted;
-  saveDB();
-  updateMuteButtonUI(chat.muted);
-  document.getElementById('header-dropdown').style.display = 'none';
-}
-
-function updateMuteButtonUI(isMuted) {
-  document.getElementById('menu-mute-btn').innerText = isMuted ? '🔔 Включить уведомления' : '🔕 Отключить уведомления';
-}
-
-function deleteCurrentChat() {
-  if (confirm('Удалить этот чат?')) {
-    delete db[activeBotToken][currentChatId];
-    saveDB();
-    triggerHardwareBack();
-  }
-}
-
-function openUserProfile() {
-  const chat = db[activeBotToken][currentChatId];
-  const avatarBox = document.getElementById('modal-avatar-box');
-  avatarBox.innerHTML = chat.user.avatar ? `<img src="${chat.user.avatar}">` : chat.user.name.charAt(0).toUpperCase();
-  document.getElementById('modal-name').innerText = chat.user.name;
-  document.getElementById('modal-username').innerText = chat.user.username;
-  document.getElementById('modal-id-val').innerText = chat.user.id || currentChatId;
-  document.getElementById('my-profile-tools').style.display = 'none';
-  document.getElementById('profile-modal').style.display = 'flex';
-}
-
-function closeProfileModal() { document.getElementById('profile-modal').style.display = 'none'; }
-function copyText(text) { navigator.clipboard.writeText(text); }
-
-function clearAllData() {
-  if (confirm('Сбросить все данные?')) { localStorage.clear(); location.reload(); }
-}
-function escapeHtml(text) { return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-
-  </script>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>
