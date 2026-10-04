@@ -40,7 +40,7 @@
   </div>
 </div>
 
-<!-- ===== Модалка: додати бота ===== -->
+<!-- ===== Модалка: додати бота (тепер відкривається лише з Налаштувань → Акаунти) ===== -->
 <div id="add-bot-modal" class="overlay hidden">
   <div class="modal">
     <h2>Додати бота</h2>
@@ -55,91 +55,188 @@
   </div>
 </div>
 
-<!-- ===== Модалка: налаштування ===== -->
+<!-- ===== Налаштування: тепер зі структурованими вкладками ===== -->
 <div id="settings-modal" class="overlay hidden">
-  <div class="modal" style="max-width:480px;">
-    <h2>Налаштування</h2>
+  <div class="modal settings-modal-wide">
+    <div class="settings-layout">
+      <nav class="settings-nav" id="settings-nav">
+        <button class="settings-nav-item active" data-tab="accounts">👤 Акаунти / Боти</button>
+        <button class="settings-nav-item" data-tab="bot-profile">🤖 Профіль бота</button>
+        <button class="settings-nav-item" data-tab="chat-wallpaper">🖼️ Чати та фон</button>
+        <button class="settings-nav-item" data-tab="notifications">🔔 Сповіщення та звуки</button>
+        <button class="settings-nav-item" data-tab="security">🔒 Безпека та пароль</button>
+        <button class="settings-nav-item" data-tab="storage">💾 Пристрої та пам'ять</button>
+        <button class="settings-nav-item" data-tab="appearance">🎨 Вигляд / Теми</button>
+      </nav>
+      <div class="settings-body">
+        <div class="settings-body-header">
+          <span id="settings-tab-title">Акаунти / Боти</span>
+          <button class="icon-btn" data-close>✕</button>
+        </div>
+        <div class="settings-panes" id="settings-panes">
 
-    <div class="settings-section">
-      <h3>Оформлення</h3>
-      <div class="settings-row"><span>Тема</span>
-        <select id="theme-select">
-          <option value="system">Системна</option>
-          <option value="light">Світла</option>
-          <option value="dark">Темна</option>
-        </select>
-      </div>
-      <div class="settings-row"><span>Акцентний колір</span>
-        <div id="accent-dots" style="display:flex;gap:8px;"></div>
+          <section class="settings-pane" data-pane="accounts">
+            <div class="settings-section">
+              <h3>Ваші боти</h3>
+              <div id="settings-bot-list"></div>
+              <button class="btn btn-primary" id="settings-add-bot-btn" style="margin-top:10px;">+ Додати нового бота</button>
+            </div>
+          </section>
+
+          <section class="settings-pane hidden" data-pane="bot-profile">
+            <div class="settings-section" style="text-align:center;">
+              <div class="avatar" id="bot-profile-avatar" style="width:96px;height:96px;font-size:34px;margin:0 auto 10px;"></div>
+              <div style="font-size:13px;color:var(--text-2);" id="bot-profile-handle"></div>
+            </div>
+            <div class="settings-section">
+              <label>Ім'я бота</label><input type="text" id="bot-name-input">
+              <label>Опис (About)</label><textarea id="bot-desc-input" rows="2"></textarea>
+              <label>Короткий опис</label><input type="text" id="bot-short-desc-input">
+              <label>Команди меню (по одній: команда — опис)</label>
+              <textarea id="bot-commands-input" rows="3" placeholder="start — Почати&#10;help — Допомога"></textarea>
+              <p style="font-size:12px;color:var(--text-2);">Аватар бота Telegram Bot API дозволяє переглядати, але встановлюється чи змінюється він лише вручну через @BotFather — прямого методу API для запису немає.</p>
+              <button class="btn btn-primary" id="save-bot-profile" style="margin-top:6px;">Зберегти профіль бота</button>
+              <p id="profile-save-msg" style="font-size:12px;color:var(--online);"></p>
+            </div>
+          </section>
+
+          <section class="settings-pane hidden" data-pane="chat-wallpaper">
+            <div class="settings-section">
+              <h3>Фон чату</h3>
+              <p style="font-size:12px;color:var(--text-2);">Фон застосовується лише локально у вашому браузері.</p>
+              <div id="wallpaper-presets" class="wallpaper-grid"></div>
+              <div class="actions" style="justify-content:flex-start;margin-top:10px;">
+                <button class="btn btn-secondary" id="wallpaper-upload-btn">Завантажити своє зображення</button>
+                <input type="file" id="wallpaper-file-input" accept="image/*" class="hidden">
+                <button class="btn btn-secondary" id="wallpaper-reset-btn">Скинути до кольору</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="settings-pane hidden" data-pane="notifications">
+            <div class="settings-section">
+              <div class="settings-row"><span>Звук нових повідомлень</span>
+                <label class="switch"><input type="checkbox" id="toggle-sound" checked><span class="slider"></span></label>
+              </div>
+              <div class="settings-row"><span>Push-сповіщення (Service Worker)</span>
+                <label class="switch"><input type="checkbox" id="toggle-push"><span class="slider"></span></label>
+              </div>
+            </div>
+          </section>
+
+          <section class="settings-pane hidden" data-pane="security">
+            <div class="settings-section">
+              <div class="settings-row"><span>Шифрування PIN-кодом</span>
+                <label class="switch"><input type="checkbox" id="toggle-encryption"><span class="slider"></span></label>
+              </div>
+            </div>
+            <div class="settings-section">
+              <h3>З'єднання з поточним ботом</h3>
+              <div class="settings-row"><span>Режим</span>
+                <select id="connection-mode">
+                  <option value="polling">Long Polling</option>
+                  <option value="webhook">Webhook (потребує власний сервер)</option>
+                </select>
+              </div>
+              <div id="polling-interval-row" class="settings-row"><span>Інтервал опитування, мс</span>
+                <input type="text" id="polling-interval" style="width:90px;text-align:right;" value="1000">
+              </div>
+              <div id="webhook-row" class="hidden">
+                <label>URL вебхука</label>
+                <input type="url" id="webhook-url" placeholder="https://your-server.example.com/hook">
+                <p style="font-size:12px;color:var(--text-2);">GitHub Pages — статичний хостинг і не може приймати вхідні POST-запити від Telegram. Для Webhook потрібен окремий сервер. Без нього використовуйте Long Polling.</p>
+                <button class="btn btn-secondary" id="apply-webhook" style="margin-top:6px;">Зареєструвати webhook</button>
+                <button class="btn btn-secondary" id="remove-webhook">Видалити webhook</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="settings-pane hidden" data-pane="storage">
+            <div class="settings-section">
+              <h3>Резервне копіювання</h3>
+              <div class="actions" style="justify-content:flex-start;">
+                <button class="btn btn-secondary" id="export-backup">Експортувати JSON</button>
+                <button class="btn btn-secondary" id="import-backup">Імпортувати JSON</button>
+                <input type="file" id="import-file-input" accept="application/json" class="hidden">
+              </div>
+            </div>
+            <div class="settings-section">
+              <h3>Медіакеш</h3>
+              <div class="settings-row"><span id="cache-size-label">Обчислення…</span>
+                <button class="btn btn-secondary" id="clear-media-cache">Очистити кеш медіа</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="settings-pane hidden" data-pane="appearance">
+            <div class="settings-section">
+              <h3>Тема</h3>
+              <div class="settings-row"><span>Режим</span>
+                <select id="theme-select">
+                  <option value="system">Системна</option>
+                  <option value="light">Світла</option>
+                  <option value="dark">Темна</option>
+                </select>
+              </div>
+              <div class="settings-row"><span>Акцентний колір</span>
+                <div id="accent-dots" style="display:flex;gap:8px;"></div>
+              </div>
+            </div>
+            <div class="settings-section">
+              <h3>Масштаб</h3>
+              <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:4px;">
+                <span>Масштаб інтерфейсу (кнопки, сайдбар, меню) — <b id="ui-scale-val">100%</b></span>
+                <input type="range" id="ui-scale-range" min="85" max="130" step="5" value="100">
+              </div>
+              <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:4px;">
+                <span>Масштаб тексту й повідомлень — <b id="msg-scale-val">100%</b></span>
+                <input type="range" id="msg-scale-range" min="85" max="130" step="5" value="100">
+              </div>
+            </div>
+          </section>
+
+        </div>
       </div>
     </div>
+  </div>
+</div>
 
-    <div class="settings-section">
-      <h3>Безпека</h3>
-      <div class="settings-row"><span>Шифрування PIN-кодом</span>
-        <label class="switch"><input type="checkbox" id="toggle-encryption"><span class="slider"></span></label>
-      </div>
+<!-- ===== Внутрішня галерея-прев'ю обраних медіа перед відправкою ===== -->
+<div id="gallery-modal" class="overlay hidden">
+  <div class="modal" style="max-width:520px;">
+    <h2>Надіслати медіа</h2>
+    <p style="font-size:12px;color:var(--text-2);">Браузери з міркувань приватності не дають застосункам читати фотогалерею пристрою напряму — вибір файлів завжди відкриває системне вікно ОС. Нижче — попередній перегляд перед відправкою, як у Telegram Web.</p>
+    <div id="gallery-grid" class="gallery-grid"></div>
+    <label>Підпис (необов'язково)</label>
+    <textarea id="gallery-caption" rows="2"></textarea>
+    <div class="actions">
+      <button class="btn btn-secondary" data-close>Скасувати</button>
+      <button class="btn btn-primary" id="gallery-send-btn">Надіслати</button>
     </div>
+  </div>
+</div>
 
-    <div class="settings-section">
-      <h3>З'єднання з поточним ботом</h3>
-      <div class="settings-row"><span>Режим</span>
-        <select id="connection-mode">
-          <option value="polling">Long Polling</option>
-          <option value="webhook">Webhook (потребує власний сервер)</option>
-        </select>
-      </div>
-      <div id="polling-interval-row" class="settings-row"><span>Інтервал опитування, мс</span>
-        <input type="text" id="polling-interval" style="width:90px;text-align:right;" value="1000">
-      </div>
-      <div id="webhook-row" class="hidden">
-        <label>URL вебхука</label>
-        <input type="url" id="webhook-url" placeholder="https://your-server.example.com/hook">
-        <p style="font-size:12px;color:var(--text-2);">GitHub Pages — статичний хостинг і не може приймати вхідні POST-запити від Telegram. Для Webhook потрібен окремий сервер (наприклад, Cloudflare Workers). Без нього використовуйте Long Polling.</p>
-        <button class="btn btn-secondary" id="apply-webhook" style="margin-top:6px;">Зареєструвати webhook</button>
-        <button class="btn btn-secondary" id="remove-webhook">Видалити webhook</button>
-      </div>
+<!-- ===== Меню вкладення (замість миттєвого системного пікера) ===== -->
+<div id="attach-menu" class="attach-popup hidden">
+  <button data-action="photo-video">🖼️ Фото або відео</button>
+  <button data-action="document">📄 Файл / Документ</button>
+  <button data-action="voice">🎤 Голосове повідомлення</button>
+  <button data-action="video-note">⚪ Відеоповідомлення (кружечок)</button>
+  <button data-action="location">📍 Геопозиція</button>
+</div>
+<input type="file" id="photo-video-input" accept="image/*,video/*" multiple class="hidden">
+<input type="file" id="document-input" class="hidden">
+
+<!-- ===== Оверлей запису голосу / відеокружечка ===== -->
+<div id="recorder-overlay" class="overlay hidden">
+  <div class="modal" style="text-align:center;max-width:340px;">
+    <div id="recorder-video-wrap" class="video-note recorder-preview hidden"><video id="recorder-video" muted autoplay playsinline></video></div>
+    <canvas id="recorder-waveform" width="280" height="60" class="hidden"></canvas>
+    <div id="recorder-timer" style="font-size:20px;margin:12px 0;">00:00</div>
+    <div class="actions" style="justify-content:center;">
+      <button class="btn btn-secondary" id="recorder-cancel">Скасувати</button>
+      <button class="btn btn-primary" id="recorder-stop">Зупинити й переглянути</button>
     </div>
-
-    <div class="settings-section">
-      <h3>Сповіщення</h3>
-      <div class="settings-row"><span>Звук нових повідомлень</span>
-        <label class="switch"><input type="checkbox" id="toggle-sound" checked><span class="slider"></span></label>
-      </div>
-      <div class="settings-row"><span>Push-сповіщення (Service Worker)</span>
-        <label class="switch"><input type="checkbox" id="toggle-push"><span class="slider"></span></label>
-      </div>
-    </div>
-
-    <div class="settings-section">
-      <h3>Профіль бота</h3>
-      <label>Ім'я бота</label><input type="text" id="bot-name-input">
-      <label>Опис (About)</label><textarea id="bot-desc-input" rows="2"></textarea>
-      <label>Короткий опис</label><input type="text" id="bot-short-desc-input">
-      <label>Команди меню (по одній: команда — опис)</label>
-      <textarea id="bot-commands-input" rows="3" placeholder="start — Почати&#10;help — Допомога"></textarea>
-      <p style="font-size:12px;color:var(--text-2);">Аватар бота Telegram Bot API дозволяє встановити лише вручну через @BotFather — прямого методу API для цього не існує.</p>
-      <button class="btn btn-primary" id="save-bot-profile" style="margin-top:6px;">Зберегти профіль бота</button>
-      <p id="profile-save-msg" style="font-size:12px;color:var(--online);"></p>
-    </div>
-
-    <div class="settings-section">
-      <h3>Резервне копіювання</h3>
-      <div class="actions" style="justify-content:flex-start;">
-        <button class="btn btn-secondary" id="export-backup">Експортувати JSON</button>
-        <button class="btn btn-secondary" id="import-backup">Імпортувати JSON</button>
-        <input type="file" id="import-file-input" accept="application/json" class="hidden">
-      </div>
-    </div>
-
-    <div class="settings-section">
-      <h3>Небезпечна зона</h3>
-      <div class="actions" style="justify-content:flex-start;">
-        <button class="btn btn-danger" id="remove-bot-btn">Видалити цього бота</button>
-      </div>
-    </div>
-
-    <div class="actions"><button class="btn btn-primary" data-close>Готово</button></div>
   </div>
 </div>
 
@@ -147,8 +244,8 @@
 <div id="app">
   <!-- LEFT -->
   <div id="left-panel" class="panel">
-    <div id="bot-switcher"></div>
     <div class="panel-header">
+      <div class="avatar" id="current-bot-avatar" style="width:34px;height:34px;font-size:13px;cursor:pointer;" title="Налаштування"></div>
       <span class="title" id="left-title">Чати</span>
       <button class="icon-btn" id="open-settings-btn" title="Налаштування">⚙️</button>
     </div>
@@ -167,7 +264,7 @@
     </div>
     <div id="chat-view" class="hidden">
       <div class="panel-header" id="chat-header">
-        <button class="icon-btn hidden" id="back-btn">←</button>
+        <button class="icon-btn" id="back-btn">←</button>
         <div class="avatar" id="chat-header-avatar" style="width:38px;height:38px;font-size:14px;"></div>
         <div style="flex:1;min-width:0;">
           <div class="title" id="chat-header-name"></div>
@@ -184,7 +281,6 @@
       </div>
       <div id="composer">
         <button class="icon-btn" id="attach-btn" title="Прикріпити">📎</button>
-        <input type="file" id="file-input" class="hidden">
         <textarea id="msg-input" placeholder="Повідомлення" rows="1"></textarea>
         <button class="icon-btn" id="emoji-btn" title="Формат">＊</button>
         <button class="icon-btn send-btn" id="send-btn" title="Надіслати">➤</button>
